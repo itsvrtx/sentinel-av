@@ -4,39 +4,269 @@
   <meta charset="UTF-8" />
   <title>Sentinel AV</title>
   <style>
-    body { font-family: system-ui, sans-serif; margin: 24px; background: #f6f8fa; color: #1f2328; }
-    h1 { margin-top: 0; }
-    .bar { display: flex; gap: 8px; margin-bottom: 16px; }
-    input { flex: 1; padding: 10px; border: 1px solid #d0d7de; border-radius: 8px; }
-    button { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
-    .btn-primary { background: #0969da; color: #fff; }
-    .btn-restore { background: #eaeef2; color: #1f2328; }
-    .btn-delete { background: #cf222e; color: #fff; }
-    .card { background: #fff; border: 1px solid #d0d7de; border-radius: 10px; padding: 14px; margin-bottom: 10px; }
-    .meta { font-size: 13px; color: #57606a; margin: 6px 0 10px; word-break: break-all; }
-    .actions { display: flex; gap: 8px; }
+    :root {
+      --bg: #f3f6fb;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --border: #dce3ec;
+      --text: #0f172a;
+      --muted: #64748b;
+      --shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+      --btn-shadow: 0 4px 12px rgba(9, 105, 218, 0.28);
+      --btn-shadow-hover: 0 6px 18px rgba(0, 180, 216, 0.4);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0b1120;
+      --surface: #111827;
+      --surface-2: #1e293b;
+      --border: #263349;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+      --btn-shadow: 0 4px 14px rgba(0, 180, 216, 0.25);
+      --btn-shadow-hover: 0 6px 20px rgba(0, 180, 216, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 28px;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    .container { max-width: 780px; margin: 0 auto; }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand img {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+    }
+    .brand h1 { margin: 0; font-size: 24px; letter-spacing: -0.3px; }
+
+    .theme-btn {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: var(--shadow);
+      transition: transform 0.15s ease, background 0.2s ease;
+    }
+    .theme-btn:hover { transform: translateY(-1px); background: var(--surface-2); }
+
+    .scan-bar {
+      display: flex;
+      gap: 10px;
+      background: var(--surface);
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+
+    select, input {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+    select { cursor: pointer; }
+    input { flex: 1; }
+    input:focus, select:focus { border-color: #00b4d8; }
+
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.25s ease;
+    }
+    button:active { transform: translateY(0); }
+
+    .btn-primary {
+      background: #0969da;
+      color: #fff;
+      box-shadow: var(--btn-shadow);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #00b4d8, #0969da);
+      box-shadow: var(--btn-shadow-hover);
+      transform: translateY(-1px);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 22px;
+      box-shadow: var(--shadow);
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+    }
+
+    h2 { font-size: 18px; margin: 0 0 12px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .empty-card {
+      text-align: center;
+      color: var(--muted);
+      padding: 28px 16px;
+      font-size: 14px;
+    }
+
+    .meta {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 8px 0 14px;
+      line-height: 1.5;
+      word-break: break-all;
+    }
+
+    .actions { display: flex; gap: 10px; }
+
+    .btn-restore {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+    .btn-restore:hover {
+      background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+      color: #0f172a;
+      transform: translateY(-1px);
+    }
+
+    .btn-delete {
+      background: #dc2626;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.28);
+    }
+    .btn-delete:hover {
+      background: linear-gradient(135deg, #f97316, #dc2626);
+      box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+      transform: translateY(-1px);
+    }
   </style>
 </head>
 <body>
-  <h1>Sentinel AV</h1>
-  <div class="bar">
-    <input id="folderInput" type="text" placeholder="Folder path to scan (e.g. ./test_lab)" value="./test_lab" />
-    <button class="btn-primary" onclick="runScan()">Scan Folder</button>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <img src="logo.png" alt="Sentinel AV" />
+        <h1>Sentinel AV</h1>
+      </div>
+      <button id="themeToggle" class="theme-btn" onclick="toggleTheme()">Dark Mode</button>
+    </div>
+
+    <div class="scan-bar">
+      <select id="folderSelect" onchange="onFolderChange()"></select>
+      <input id="folderInput" type="text" placeholder="Choose a preset or enter a custom path..." />
+      <button class="btn-primary" onclick="runScan()">Scan Folder</button>
+    </div>
+
+    <div class="status-pill">
+      <span id="statusDot" class="dot"></span>
+      <span id="status">Ready to scan.</span>
+    </div>
+
+    <h2>Quarantine Vault</h2>
+    <div id="vault"></div>
   </div>
-  <p id="status">Ready to scan.</p>
-  <h2>Quarantine Vault</h2>
-  <div id="vault"></div>
 
   <script>
-    const { invoke } = window.__TAURI__.core;
+    function applyTheme(theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+      document.getElementById("themeToggle").textContent =
+        theme === "dark" ? "Light Mode" : "Dark Mode";
+      localStorage.setItem("sentinel-theme", theme);
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute("data-theme") || "light";
+      applyTheme(current === "dark" ? "light" : "dark");
+    }
+
+    applyTheme(localStorage.getItem("sentinel-theme") || "light");
+
+    const tauriCore = window.__TAURI__ && window.__TAURI__.core;
+
+    async function onFolderChange() {
+      const select = document.getElementById("folderSelect");
+      const input = document.getElementById("folderInput");
+      if (select.value === "__custom__") {
+        const picked = await tauriCore.invoke("pick_custom_folder");
+        if (picked) {
+          input.value = picked;
+        }
+      } else {
+        input.value = select.value;
+      }
+    }
+
+    async function loadFolders() {
+      if (!tauriCore) return;
+      const folders = await tauriCore.invoke("get_common_folders");
+      const select = document.getElementById("folderSelect");
+      select.innerHTML =
+        folders.map(f => `<option value="${f.path}">${f.label}</option>`).join("") +
+        `<option value="__custom__">Custom Path...</option>`;
+      onFolderChange();
+    }
 
     async function loadVault() {
-      const items = await invoke("get_quarantined");
       const vault = document.getElementById("vault");
-      if (items.length === 0) {
-        vault.innerHTML = "<p>No quarantined threats. Your system is clean.</p>";
+      if (!tauriCore) {
+        vault.innerHTML = `<div class="card empty-card">Enable <code>"withGlobalTauri": true</code> in <code>tauri.conf.json</code> to connect the scanner.</div>`;
         return;
       }
+
+      const items = await tauriCore.invoke("get_quarantined");
+      if (items.length === 0) {
+        vault.innerHTML = `<div class="card empty-card">No quarantined threats. Your system is clean.</div>`;
+        return;
+      }
+
       vault.innerHTML = items.map(item => `
         <div class="card">
           <strong>Threat: ${item.rule}</strong>
@@ -53,27 +283,33 @@
     }
 
     async function runScan() {
-      const target = document.getElementById("folderInput").value;
-      document.getElementById("status").textContent = "Scanning...";
-      const found = await invoke("scan_folder", { target });
+      if (!tauriCore) return;
+      const target = document.getElementById("folderInput").value.trim();
+      if (!target) return;
+      document.getElementById("status").textContent = `Scanning ${target}...`;
+      document.getElementById("statusDot").style.background = "#eab308";
+
+      const found = await tauriCore.invoke("scan_folder", { target });
       document.getElementById("status").textContent =
         found.length ? `Quarantined ${found.length} threat(s).` : "Scan complete: no threats found.";
+      document.getElementById("statusDot").style.background = found.length ? "#ef4444" : "#22c55e";
       await loadVault();
     }
 
     async function restoreFile(id) {
-      const path = await invoke("restore_item", { id });
+      const path = await tauriCore.invoke("restore_item", { id });
       document.getElementById("status").textContent = `Restored to ${path}`;
       await loadVault();
     }
 
     async function deleteFile(id) {
       if (!confirm("Permanently delete this quarantined file? This cannot be undone.")) return;
-      await invoke("delete_item", { id });
+      await tauriCore.invoke("delete_item", { id });
       document.getElementById("status").textContent = "File permanently deleted.";
       await loadVault();
     }
 
+    loadFolders();
     loadVault();
   </script>
 </body>

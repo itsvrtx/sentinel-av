@@ -35,10 +35,21 @@ fn delete_item(id: String) -> Result<(), String> {
     quarantine::delete_permanently(&id, Path::new(VAULT_DIR)).map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+async fn pick_custom_folder() -> Option<String> {
+    rfd::AsyncFileDialog::new()
+        .set_title("Choose a folder to scan")
+        .pick_folder()
+        .await
+        .map(|handle| handle.path().display().to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
+            get_common_folders,
+            pick_custom_folder,
             scan_folder,
             get_quarantined,
             restore_item,
@@ -46,4 +57,25 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running Sentinel AV");
+}
+
+#[derive(serde::Serialize)]
+struct FolderOption {
+    label: String,
+    path: String,
+}
+
+#[tauri::command]
+fn get_common_folders() -> Vec<FolderOption> {
+    let home = std::env::var("USERPROFILE")
+        .or_else(|_| std::env::var("HOME"))
+        .unwrap_or_else(|_| ".".to_string());
+
+    let sep = std::path::MAIN_SEPARATOR;
+    vec![
+        FolderOption { label: "Downloads".into(), path: format!("{home}{sep}Downloads") },
+        FolderOption { label: "Desktop".into(), path: format!("{home}{sep}Desktop") },
+        FolderOption { label: "Documents".into(), path: format!("{home}{sep}Documents") },
+        FolderOption { label: "Full User Folder".into(), path: home },
+    ]
 }
