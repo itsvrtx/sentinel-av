@@ -1,0 +1,8 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/core-scanner",
+    "crates/quarantine",
+    "crates/service-daemon",
+    "crates/kernel-sensor",
+]

@@ -1,0 +1,8 @@
+[package]
+name = "service-daemon"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+core-scanner = { path = "../core-scanner" }
+quarantine = { path = "../quarantine" }
