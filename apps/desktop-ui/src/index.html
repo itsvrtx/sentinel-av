@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sentinel AV</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; background: #f6f8fa; color: #1f2328; }
+    h1 { margin-top: 0; }
+    .bar { display: flex; gap: 8px; margin-bottom: 16px; }
+    input { flex: 1; padding: 10px; border: 1px solid #d0d7de; border-radius: 8px; }
+    button { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .btn-primary { background: #0969da; color: #fff; }
+    .btn-restore { background: #eaeef2; color: #1f2328; }
+    .btn-delete { background: #cf222e; color: #fff; }
+    .card { background: #fff; border: 1px solid #d0d7de; border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+    .meta { font-size: 13px; color: #57606a; margin: 6px 0 10px; word-break: break-all; }
+    .actions { display: flex; gap: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Sentinel AV</h1>
+  <div class="bar">
+    <input id="folderInput" type="text" placeholder="Folder path to scan (e.g. ./test_lab)" value="./test_lab" />
+    <button class="btn-primary" onclick="runScan()">Scan Folder</button>
+  </div>
+  <p id="status">Ready to scan.</p>
+  <h2>Quarantine Vault</h2>
+  <div id="vault"></div>
+
+  <script>
+    const { invoke } = window.__TAURI__.core;
+
+    async function loadVault() {
+      const items = await invoke("get_quarantined");
+      const vault = document.getElementById("vault");
+      if (items.length === 0) {
+        vault.innerHTML = "<p>No quarantined threats. Your system is clean.</p>";
+        return;
+      }
+      vault.innerHTML = items.map(item => `
+        <div class="card">
+          <strong>Threat: ${item.rule}</strong>
+          <div class="meta">
+            Original Path: ${item.original_path}<br/>
+            SHA-256: ${item.sha256}
+          </div>
+          <div class="actions">
+            <button class="btn-restore" onclick="restoreFile('${item.id}')">Restore (Safe)</button>
+            <button class="btn-delete" onclick="deleteFile('${item.id}')">Delete Permanently</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function runScan() {
+      const target = document.getElementById("folderInput").value;
+      document.getElementById("status").textContent = "Scanning...";
+      const found = await invoke("scan_folder", { target });
+      document.getElementById("status").textContent =
+        found.length ? `Quarantined ${found.length} threat(s).` : "Scan complete: no threats found.";
+      await loadVault();
+    }
+
+    async function restoreFile(id) {
+      const path = await invoke("restore_item", { id });
+      document.getElementById("status").textContent = `Restored to ${path}`;
+      await loadVault();
+    }
+
+    async function deleteFile(id) {
+      if (!confirm("Permanently delete this quarantined file? This cannot be undone.")) return;
+      await invoke("delete_item", { id });
+      document.getElementById("status").textContent = "File permanently deleted.";
+      await loadVault();
+    }
+
+    loadVault();
+  </script>
+</body>
+</html>

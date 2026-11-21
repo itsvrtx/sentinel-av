@@ -5,4 +5,5 @@ members = [
     "crates/quarantine",
     "crates/service-daemon",
     "crates/kernel-sensor",
+    "apps/desktop-ui/src-tauri",
 ]
