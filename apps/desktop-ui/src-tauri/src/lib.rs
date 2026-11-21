@@ -1,5 +1,63 @@
 use quarantine::QuarantineEntry;
 use std::path::Path;
+use tauri::Emitter;
+
+#[derive(serde::Serialize, Clone)]
+struct ScanProgress {
+    count: usize,
+    current_file: String,
+}
+
+#[derive(serde::Serialize)]
+struct ScanSummary {
+    files_scanned: usize,
+    duration_ms: u128,
+    quarantined: Vec<QuarantineEntry>,
+}
+
+#[tauri::command]
+async fn scan_folder(app: tauri::AppHandle, target: String) -> Result<ScanSummary, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        // Locate rules/ relative to the sentinel-av workspace root
+        let rules_dir = if Path::new("rules").exists() {
+            Path::new("rules")
+        } else {
+            Path::new("../../rules")
+        };
+
+        let report = core_scanner::scan_directory_with_progress(
+            Path::new(&target),
+            rules_dir,
+            |count, path| {
+                let _ = app.emit(
+                    "scan-progress",
+                    ScanProgress {
+                        count,
+                        current_file: path.display().to_string(),
+                    },
+                );
+            },
+        )?;
+
+        let vault = Path::new(VAULT_DIR);
+        let mut quarantined = Vec::new();
+        for item in report.findings {
+            let rule = item.matched_rule.unwrap_or_else(|| "Unknown".into());
+            let entry =
+                quarantine::quarantine_file(Path::new(&item.path), &item.sha256, &rule, vault)
+                    .map_err(|e| e.to_string())?;
+            quarantined.push(entry);
+        }
+
+        Ok(ScanSummary {
+            files_scanned: report.files_scanned,
+            duration_ms: report.duration_ms,
+            quarantined,
+        })
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
 
 const VAULT_DIR: &str = "quarantine_vault";
 

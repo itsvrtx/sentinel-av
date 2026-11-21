@@ -1,30 +1,39 @@
-use std::fs::File;
-use std::io::{self, Read};
+use std::fs;
 use std::path::Path;
+use yara_x::{Compiler, Rules, Scanner};
 
-/// Scans a file in 64 KB chunks for a known suspicious byte pattern.
-pub fn find_signature(path: &Path, signature: &[u8]) -> io::Result<bool> {
-    if signature.is_empty() {
-        return Ok(false);
+/// Loads and compiles all .yar rule files from the rules/ directory.
+pub fn load_rules(rules_dir: &Path) -> Result<Rules, String> {
+    let mut compiler = Compiler::new();
+    let entries = fs::read_dir(rules_dir).map_err(|e| format!("Cannot read rules dir: {e}"))?;
+
+    let mut loaded = 0;
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.extension().and_then(|e| e.to_str()) == Some("yar") {
+            let source = fs::read_to_string(&path)
+                .map_err(|e| format!("Failed to read {}: {e}", path.display()))?;
+            compiler
+                .add_source(source.as_str())
+                .map_err(|e| format!("Invalid YARA rule in {}: {e}", path.display()))?;
+            loaded += 1;
+        }
     }
 
-    let mut file = File::open(path)?;
-    let mut buffer = vec![0u8; 64 * 1024 + signature.len()];
-    let mut carry = 0;
-
-    loop {
-        let bytes_read = file.read(&mut buffer[carry..])?;
-        if bytes_read == 0 {
-            return Ok(false);
-        }
-
-        let total = carry + bytes_read;
-        if buffer[..total].windows(signature.len()).any(|w| w == signature) {
-            return Ok(true);
-        }
-
-        // Keep the tail bytes so a signature split across two chunks isn't missed
-        carry = signature.len().saturating_sub(1).min(total);
-        buffer.copy_within(total - carry..total, 0);
+    if loaded == 0 {
+        return Err(format!("No .yar files found in {}", rules_dir.display()));
     }
+
+    Ok(compiler.build())
+}
+
+/// Scans a single file against compiled YARA rules and returns the first matched rule name.
+pub fn scan_file_with_rules(rules: &Rules, path: &Path) -> Option<String> {
+    let mut scanner = Scanner::new(rules);
+    scanner.fast_scan(true);
+    let results = scanner.scan_file(path).ok()?;
+    results
+        .matching_rules()
+        .next()
+        .map(|rule| rule.identifier().to_string())
 }

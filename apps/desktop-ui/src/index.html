@@ -286,14 +286,31 @@
       if (!tauriCore) return;
       const target = document.getElementById("folderInput").value.trim();
       if (!target) return;
-      document.getElementById("status").textContent = `Scanning ${target}...`;
-      document.getElementById("statusDot").style.background = "#eab308";
 
-      const found = await tauriCore.invoke("scan_folder", { target });
-      document.getElementById("status").textContent =
-        found.length ? `Quarantined ${found.length} threat(s).` : "Scan complete: no threats found.";
-      document.getElementById("statusDot").style.background = found.length ? "#ef4444" : "#22c55e";
-      await loadVault();
+      const statusEl = document.getElementById("status");
+      const dotEl = document.getElementById("statusDot");
+      statusEl.textContent = `Starting YARA scan on ${target}...`;
+      dotEl.style.background = "#eab308";
+
+      const unlisten = await window.__TAURI__.event.listen("scan-progress", (event) => {
+        const { count, current_file } = event.payload;
+        statusEl.textContent = `Checked ${count} file(s) — ${current_file}`;
+      });
+
+      try {
+        const summary = await tauriCore.invoke("scan_folder", { target });
+        const threats = summary.quarantined.length;
+        statusEl.textContent = threats
+          ? `Scanned ${summary.files_scanned} files in ${summary.duration_ms} ms — quarantined ${threats} threat(s).`
+          : `Scanned ${summary.files_scanned} files in ${summary.duration_ms} ms — no threats found.`;
+        dotEl.style.background = threats ? "#ef4444" : "#22c55e";
+        await loadVault();
+      } catch (err) {
+        statusEl.textContent = `Scan error: ${err}`;
+        dotEl.style.background = "#ef4444";
+      } finally {
+        unlisten();
+      }
     }
 
     async function restoreFile(id) {
