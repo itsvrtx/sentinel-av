@@ -7,14 +7,15 @@ fn main() {
     let vault = Path::new("quarantine_vault");
 
     println!("Scanning: {target}");
-    let results = core_scanner::scan_directory(Path::new(&target));
+    let report = core_scanner::scan_directory_with_progress(Path::new(&target), Path::new("../../rules"), |_, _| {})
+        .expect("Scan failed");
 
-    if results.is_empty() {
+    if report.findings.is_empty() {
         println!("No threats found.");
         return;
     }
 
-    for item in results {
+    for item in report.findings {
         let rule = item.matched_rule.unwrap_or_else(|| "Unknown".into());
         println!("[ALERT] {} | Rule: {}", item.path, rule);
 
