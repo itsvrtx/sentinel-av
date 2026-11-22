@@ -245,6 +245,21 @@ fn get_active_signatures() -> Vec<RuleSummary> {
             description: "Internal Sentinel AV test verification signature".into(),
         },
         RuleSummary {
+            name: "Trojan_Generic_Dropper".into(),
+            category: "Trojan / Dropper".into(),
+            description: "Detects memory injection, staging downloaders, and concealed execution".into(),
+        },
+        RuleSummary {
+            name: "Trojan_RAT_Indicator".into(),
+            category: "Trojan / RAT".into(),
+            description: "Detects Remote Access Trojans (AsyncRAT, NjRAT, Remcos, Quasar)".into(),
+        },
+        RuleSummary {
+            name: "Trojan_InfoStealer_Vault".into(),
+            category: "Trojan / Stealer".into(),
+            description: "Detects browser credential, cookie, and cryptocurrency wallet harvesting".into(),
+        },
+        RuleSummary {
             name: "Suspicious_Webshell".into(),
             category: "Webshell / Backdoor".into(),
             description: "Detects common PHP webshells (c99, r57, b374k, eval base64)".into(),

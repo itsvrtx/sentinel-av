@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sentinel AV — Next-Gen Antivirus</title>
+  <title>Sentinel AV — Antivirus Engine</title>
   <style>
     :root {
       --bg: #090d16;
@@ -65,6 +65,33 @@
       user-select: none;
       transition: background var(--transition), color var(--transition);
     }
+
+    /* SVG Icon Helpers - ensure all SVGs use currentColor stroke and no fill */
+    svg {
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .icon,
+    .icon-lg,
+    .icon-sm,
+    .empty-state svg {
+      display: inline-block;
+      vertical-align: middle;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    .icon { width: 16px; height: 16px; }
+    .icon-lg { width: 20px; height: 20px; }
+    .icon-sm { width: 14px; height: 14px; }
 
     /* App Header */
     header {
@@ -182,7 +209,6 @@
       justify-content: center;
       cursor: pointer;
       transition: all var(--transition);
-      font-size: 15px;
     }
 
     .icon-btn:hover {
@@ -324,14 +350,13 @@
       background: rgba(14, 165, 233, 0.08);
     }
 
-    .shortcut-icon {
-      font-size: 20px;
-    }
-
     .shortcut-label {
       font-size: 13px;
       font-weight: 600;
       color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .shortcut-sub {
@@ -437,61 +462,6 @@
       font-size: 12px;
     }
 
-    /* Live Progress Card */
-    .scan-live-box {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 18px 20px;
-      margin-top: 14px;
-      display: none;
-    }
-
-    .progress-bar-container {
-      height: 8px;
-      background: var(--surface-3);
-      border-radius: 999px;
-      overflow: hidden;
-      margin: 12px 0 10px;
-      position: relative;
-    }
-
-    .progress-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--accent-hover));
-      width: 0%;
-      transition: width 0.15s ease;
-      border-radius: 999px;
-      position: relative;
-    }
-
-    .progress-bar-fill.indeterminate {
-      width: 35%;
-      animation: indeterminate 1.4s infinite ease-in-out;
-    }
-
-    @keyframes indeterminate {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(350%); }
-    }
-
-    .progress-meta {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    .current-file-ticker {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--text-muted);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      margin-top: 6px;
-    }
-
     /* Scan Stats Summary Cards */
     .stats-row {
       display: grid;
@@ -530,6 +500,65 @@
 
     .stat-value.clean {
       color: var(--success);
+    }
+
+    /* File Path Scanned Display Box (directly below stats) */
+    .active-scan-path-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all var(--transition);
+    }
+
+    .active-scan-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .active-scan-path {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--accent);
+      word-break: break-all;
+      line-height: 1.4;
+      min-height: 18px;
+    }
+
+    .progress-bar-container {
+      height: 6px;
+      background: var(--surface-3);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 6px;
+      position: relative;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+      width: 0%;
+      border-radius: 999px;
+    }
+
+    .progress-bar-fill.scanning {
+      width: 40%;
+      animation: indeterminate 1.3s infinite ease-in-out;
+    }
+
+    @keyframes indeterminate {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(300%); }
     }
 
     /* Live Findings Feed */
@@ -667,7 +696,10 @@
       width: 48px;
       height: 48px;
       margin-bottom: 12px;
-      opacity: 0.5;
+      opacity: 0.6;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.5;
     }
 
     .empty-state h3 {
@@ -742,6 +774,29 @@
       color: var(--success);
       font-size: 12px;
       font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .live-pulse-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--accent);
+      background: rgba(14, 165, 233, 0.1);
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulseAnim 1.5s infinite;
     }
 
     /* Signatures list */
@@ -834,7 +889,7 @@
         <span id="systemShieldText">Shield Active</span>
       </div>
       <button class="icon-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
-        <span id="themeIcon">☀️</span>
+        <span id="themeIconSlot"></span>
       </button>
     </div>
   </header>
@@ -842,17 +897,21 @@
   <!-- Navigation Tabs -->
   <nav role="tablist">
     <div class="nav-tab active" id="tabNavScanner" onclick="switchTab('scanner')" role="tab">
-      🛡️ Threat Scanner
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Threat Scanner
     </div>
     <div class="nav-tab" id="tabNavVault" onclick="switchTab('vault')" role="tab">
-      📦 Quarantine Vault
+      <svg class="icon" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+      Quarantine Vault
       <span class="nav-badge" id="vaultBadgeCount">0</span>
     </div>
     <div class="nav-tab" id="tabNavProcesses" onclick="switchTab('processes')" role="tab">
-      ⚡ Process Monitor
+      <svg class="icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Process Monitor
     </div>
     <div class="nav-tab" id="tabNavSignatures" onclick="switchTab('signatures')" role="tab">
-      📋 Signatures
+      <svg class="icon" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+      Signatures
     </div>
   </nav>
 
@@ -863,32 +922,43 @@
       <section class="panel">
         <div class="panel-header">
           <div>
-            <h2 class="panel-title">🛡️ On-Demand File & Folder Scanner</h2>
+            <h2 class="panel-title">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              On-Demand File & Folder Scanner
+            </h2>
             <p class="panel-subtitle">Select a target folder or choose a quick location to scan with YARA pattern matching</p>
           </div>
         </div>
 
         <!-- Quick Location Shortcuts -->
         <div class="shortcuts-grid" id="shortcutsContainer">
-          <button class="shortcut-card" onclick="selectPath('test_lab')">
-            <span class="shortcut-icon">🧪</span>
-            <span class="shortcut-label">Test Lab (Demo)</span>
+          <button class="shortcut-card highlight" onclick="selectPath('test_lab')">
+            <span class="shortcut-label">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M10 2v7.31L4.14 19.57A2 2 0 0 0 5.86 22h12.28a2 2 0 0 0 1.72-2.43L14 9.31V2M8.5 2h7M7 16h10"/></svg>
+              Test Lab (Demo)
+            </span>
             <span class="shortcut-sub">test_lab/</span>
           </button>
           <button class="shortcut-card" onclick="selectPath('downloads')">
-            <span class="shortcut-icon">📥</span>
-            <span class="shortcut-label">Downloads</span>
-            <span class="shortcut-sub" id="subDownloads">Loading...</span>
+            <span class="shortcut-label">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Downloads
+            </span>
+            <span class="shortcut-sub" id="subDownloads">~/Downloads</span>
           </button>
           <button class="shortcut-card" onclick="selectPath('desktop')">
-            <span class="shortcut-icon">🖥️</span>
-            <span class="shortcut-label">Desktop</span>
-            <span class="shortcut-sub" id="subDesktop">Loading...</span>
+            <span class="shortcut-label">
+              <svg class="icon" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              Desktop
+            </span>
+            <span class="shortcut-sub" id="subDesktop">~/Desktop</span>
           </button>
           <button class="shortcut-card" onclick="selectPath('documents')">
-            <span class="shortcut-icon">📄</span>
-            <span class="shortcut-label">Documents</span>
-            <span class="shortcut-sub" id="subDocuments">Loading...</span>
+            <span class="shortcut-label">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Documents
+            </span>
+            <span class="shortcut-sub" id="subDocuments">~/Documents</span>
           </button>
         </div>
 
@@ -904,27 +974,17 @@
             />
           </div>
           <button class="btn btn-secondary" onclick="browseFolder()">
-            📂 Browse…
+            <svg class="icon" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+            Browse…
           </button>
           <button class="btn btn-primary" id="startScanBtn" onclick="startScan()">
-            🚀 Start Scan
+            <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span id="startScanBtnText">Start Scan</span>
           </button>
         </div>
 
-        <!-- Live Scan Progress Section -->
-        <div class="scan-live-box" id="scanLiveBox">
-          <div class="progress-meta">
-            <span id="scanStatusTitle" style="font-weight: 700; color: var(--text);">Scanning in progress…</span>
-            <span id="scanFileCounter">0 files checked</span>
-          </div>
-          <div class="progress-bar-container">
-            <div class="progress-bar-fill indeterminate" id="scanProgressBar"></div>
-          </div>
-          <div class="current-file-ticker" id="currentFileTicker">Initializing scanner engine...</div>
-        </div>
-
-        <!-- Stats Summary Section -->
-        <div class="stats-row" id="scanStatsRow" style="display: none;">
+        <!-- Stats Section: Files Analyzed, Scan Duration, Threats Neutralized -->
+        <div class="stats-row" id="scanStatsRow">
           <div class="stat-card">
             <span class="stat-label">Files Analyzed</span>
             <span class="stat-value" id="statFilesScanned">0</span>
@@ -939,9 +999,24 @@
           </div>
         </div>
 
+        <!-- File Path Scanned Display Box (Directly below stats) -->
+        <div class="active-scan-path-box" id="activeScanPathBox">
+          <div class="active-scan-header">
+            <span>Currently Scanning File Path</span>
+            <span id="activeScanCounter">Ready to scan</span>
+          </div>
+          <div class="active-scan-path" id="activeScanPath">Select a folder and click Start Scan to begin analysis.</div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" id="scanProgressBar"></div>
+          </div>
+        </div>
+
         <!-- Live Threats Finding Feed -->
         <div class="findings-section" id="findingsSection">
-          <h3 style="font-size: 14px; margin-bottom: 12px; color: var(--danger);">⚠️ Threats Detected & Quarantined:</h3>
+          <h3 style="font-size: 14px; margin-bottom: 12px; color: var(--danger); display: flex; align-items: center; gap: 8px;">
+            <svg class="icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Threats Detected & Quarantined:
+          </h3>
           <div id="findingsList"></div>
         </div>
       </section>
@@ -952,11 +1027,15 @@
       <section class="panel">
         <div class="panel-header">
           <div>
-            <h2 class="panel-title">📦 Quarantine Vault</h2>
+            <h2 class="panel-title">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>
+              Quarantine Vault
+            </h2>
             <p class="panel-subtitle">Isolated threats neutralized via XOR byte masking. Safe to review, restore, or delete.</p>
           </div>
           <button class="btn btn-secondary btn-sm" onclick="loadVault()">
-            🔄 Refresh Vault
+            <svg class="icon-sm" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-1.19"/></svg>
+            Refresh Vault
           </button>
         </div>
 
@@ -982,11 +1061,18 @@
       <section class="panel">
         <div class="panel-header">
           <div>
-            <h2 class="panel-title">⚡ Real-Time Process Monitor</h2>
-            <p class="panel-subtitle">Monitor running system tasks for suspicious names, anomalous memory, or trojan patterns.</p>
+            <h2 class="panel-title">
+              <svg class="icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Real-Time Process Monitor
+              <span class="live-pulse-badge">
+                <span class="live-dot"></span> Auto-refresh
+              </span>
+            </h2>
+            <p class="panel-subtitle">Continuously monitors active tasks for suspicious behavior, high CPU, and trojan patterns.</p>
           </div>
           <button class="btn btn-secondary btn-sm" id="refreshProcessesBtn" onclick="loadProcesses()">
-            🔄 Refresh Processes
+            <svg class="icon-sm" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-1.19"/></svg>
+            Refresh Now
           </button>
         </div>
 
@@ -999,7 +1085,7 @@
             oninput="filterProcesses()"
           />
           <span style="font-size: 12px; color: var(--text-muted);" id="processStatusText">
-            Loading system tasks...
+            Monitoring active tasks...
           </span>
         </div>
 
@@ -1032,7 +1118,10 @@
       <section class="panel">
         <div class="panel-header">
           <div>
-            <h2 class="panel-title">📋 Built-In Threat Signature Database</h2>
+            <h2 class="panel-title">
+              <svg class="icon" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
+              Built-In Threat Signature Database
+            </h2>
             <p class="panel-subtitle">Compiled YARA-X rules actively protecting your files during scans.</p>
           </div>
         </div>
@@ -1045,7 +1134,7 @@
   <div class="toast-banner" id="toastBanner"></div>
 
   <script>
-    // Robust Tauri 2 API detection
+    // Tauri 2 API detection
     const getInvoke = () => window.__TAURI__?.core?.invoke || window.__TAURI__?.invoke || null;
     const getListen = () => window.__TAURI__?.event?.listen || null;
 
@@ -1053,6 +1142,9 @@
     let allVaultItems = [];
     let allProcesses = [];
     let activeUnlisten = null;
+    let processAutoRefreshTimer = null;
+    let isFetchingProcesses = false;
+    let scanDurationTimer = null;
 
     // Theme Management
     function initTheme() {
@@ -1063,7 +1155,12 @@
     function applyTheme(theme) {
       document.documentElement.setAttribute("data-theme", theme);
       const isDark = theme === "dark";
-      document.getElementById("themeIcon").textContent = isDark ? "☀️" : "🌙";
+      const iconSlot = document.getElementById("themeIconSlot");
+      if (iconSlot) {
+        iconSlot.innerHTML = isDark
+          ? `<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`
+          : `<svg class="icon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`;
+      }
       localStorage.setItem("sentinel-theme", theme);
     }
 
@@ -1087,8 +1184,15 @@
         }
       });
 
+      // Manage auto-refresh for process monitor
+      if (tabId === "processes") {
+        loadProcesses();
+        startProcessAutoRefresh();
+      } else {
+        stopProcessAutoRefresh();
+      }
+
       if (tabId === "vault") loadVault();
-      if (tabId === "processes") loadProcesses();
       if (tabId === "signatures") loadSignatures();
     }
 
@@ -1122,26 +1226,34 @@
         shortcutsContainer.innerHTML = "";
 
         commonFolders.forEach(folder => {
-          let icon = "📁";
           const labelLower = folder.label.toLowerCase();
-          if (labelLower.includes("download")) icon = "📥";
-          else if (labelLower.includes("desktop")) icon = "🖥️";
-          else if (labelLower.includes("document")) icon = "📄";
-          else if (labelLower.includes("test")) icon = "🧪";
-          else if (labelLower.includes("user")) icon = "🏠";
+          let iconSvg = `<svg class="icon" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>`;
+
+          if (labelLower.includes("download")) {
+            iconSvg = `<svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>`;
+          } else if (labelLower.includes("desktop")) {
+            iconSvg = `<svg class="icon" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`;
+          } else if (labelLower.includes("document")) {
+            iconSvg = `<svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`;
+          } else if (labelLower.includes("test")) {
+            iconSvg = `<svg class="icon" viewBox="0 0 24 24"><path d="M10 2v7.31L4.14 19.57A2 2 0 0 0 5.86 22h12.28a2 2 0 0 0 1.72-2.43L14 9.31V2M8.5 2h7M7 16h10"/></svg>`;
+          } else if (labelLower.includes("user")) {
+            iconSvg = `<svg class="icon" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+          }
 
           const card = document.createElement("button");
           card.className = "shortcut-card" + (labelLower.includes("test") ? " highlight" : "");
           card.onclick = () => selectPath(folder.path);
           card.innerHTML = `
-            <span class="shortcut-icon">${icon}</span>
-            <span class="shortcut-label">${escapeHtml(folder.label)}</span>
+            <span class="shortcut-label">
+              ${iconSvg}
+              ${escapeHtml(folder.label)}
+            </span>
             <span class="shortcut-sub" title="${escapeHtml(folder.path)}">${escapeHtml(folder.path)}</span>
           `;
           shortcutsContainer.appendChild(card);
         });
 
-        // Pre-select test_lab if available, otherwise first folder
         const testLab = commonFolders.find(f => f.label.toLowerCase().includes("test"));
         if (testLab) {
           selectPath(testLab.path);
@@ -1184,34 +1296,46 @@
       const invoke = getInvoke();
       const listen = getListen();
       const scanBtn = document.getElementById("startScanBtn");
-      const liveBox = document.getElementById("scanLiveBox");
-      const statsRow = document.getElementById("scanStatsRow");
+      const scanBtnText = document.getElementById("startScanBtnText");
+      const activeScanPath = document.getElementById("activeScanPath");
+      const activeScanCounter = document.getElementById("activeScanCounter");
+      const progressBar = document.getElementById("scanProgressBar");
       const findingsSection = document.getElementById("findingsSection");
       const findingsList = document.getElementById("findingsList");
       const shieldBadge = document.getElementById("systemShieldBadge");
       const shieldText = document.getElementById("systemShieldText");
-      const ticker = document.getElementById("currentFileTicker");
-      const fileCounter = document.getElementById("scanFileCounter");
+      const statFiles = document.getElementById("statFilesScanned");
+      const statDuration = document.getElementById("statDuration");
+      const statThreats = document.getElementById("statThreatsCount");
 
       scanBtn.disabled = true;
-      scanBtn.innerHTML = "⏳ Scanning…";
-      liveBox.style.display = "block";
-      statsRow.style.display = "none";
+      scanBtnText.textContent = "Scanning…";
       findingsSection.style.display = "none";
       findingsList.innerHTML = "";
 
+      statFiles.textContent = "0";
+      statThreats.textContent = "0";
+      statThreats.className = "stat-value clean";
+
       shieldBadge.className = "status-badge scanning";
       shieldText.textContent = "Scanning…";
-      ticker.textContent = `Starting scan on: ${target}`;
-      fileCounter.textContent = "0 files checked";
+      activeScanPath.textContent = `Analyzing: ${target}`;
+      activeScanCounter.textContent = "0 files analyzed";
+      progressBar.className = "progress-bar-fill scanning";
 
-      // Subscribe to real-time scan progress events
+      const startTime = performance.now();
+      scanDurationTimer = setInterval(() => {
+        statDuration.textContent = `${Math.round(performance.now() - startTime)} ms`;
+      }, 50);
+
+      // Listen for progress updates emitted from Rust backend
       if (listen) {
         try {
           activeUnlisten = await listen("scan-progress", (event) => {
             const { count, current_file } = event.payload;
-            fileCounter.textContent = `${count.toLocaleString()} file(s) checked`;
-            ticker.textContent = `Analyzing: ${current_file}`;
+            statFiles.textContent = count.toLocaleString();
+            activeScanCounter.textContent = `${count.toLocaleString()} file(s) checked`;
+            activeScanPath.textContent = current_file;
           });
         } catch (e) {
           console.warn("Could not register scan-progress listener:", e);
@@ -1219,11 +1343,11 @@
       }
 
       if (!invoke) {
-        // Mock fallback for browser dev preview
         setTimeout(() => {
-          liveBox.style.display = "none";
+          clearInterval(scanDurationTimer);
           scanBtn.disabled = false;
-          scanBtn.innerHTML = "🚀 Start Scan";
+          scanBtnText.textContent = "Start Scan";
+          progressBar.className = "progress-bar-fill";
           shieldBadge.className = "status-badge";
           shieldText.textContent = "Shield Active";
           showToast("Tauri API not active in plain browser view.", "info");
@@ -1233,16 +1357,17 @@
 
       try {
         const summary = await invoke("scan_folder", { target });
-        const threats = summary.quarantined || [];
+        clearInterval(scanDurationTimer);
 
-        // Update stats
-        document.getElementById("statFilesScanned").textContent = summary.files_scanned.toLocaleString();
-        document.getElementById("statDuration").textContent = `${summary.duration_ms} ms`;
-        const threatsCountEl = document.getElementById("statThreatsCount");
-        threatsCountEl.textContent = threats.length;
+        const threats = summary.quarantined || [];
+        statFiles.textContent = summary.files_scanned.toLocaleString();
+        statDuration.textContent = `${summary.duration_ms} ms`;
+        statThreats.textContent = threats.length;
+        activeScanCounter.textContent = `Completed (${summary.files_scanned} files)`;
+        activeScanPath.textContent = `Scan finished for ${target}`;
 
         if (threats.length > 0) {
-          threatsCountEl.className = "stat-value threat";
+          statThreats.className = "stat-value threat";
           shieldBadge.className = "status-badge threat";
           shieldText.textContent = `${threats.length} Threat(s) Neutralized`;
 
@@ -1250,7 +1375,10 @@
           findingsList.innerHTML = threats.map(item => `
             <div class="threat-card">
               <div class="threat-title-row">
-                <span class="threat-title">🚨 ${escapeHtml(item.rule)}</span>
+                <span class="threat-title">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  ${escapeHtml(item.rule)}
+                </span>
                 <span class="threat-pill">Quarantined</span>
               </div>
               <div class="threat-path"><strong>File:</strong> ${escapeHtml(item.original_path)}</div>
@@ -1260,27 +1388,29 @@
 
           showToast(`Scan complete: ${threats.length} threat(s) neutralized and isolated in vault.`, "error");
         } else {
-          threatsCountEl.className = "stat-value clean";
+          statThreats.className = "stat-value clean";
           shieldBadge.className = "status-badge";
           shieldText.textContent = "System Clean";
           showToast(`Scan complete: Checked ${summary.files_scanned} files. No threats found!`, "success");
         }
 
-        statsRow.style.display = "grid";
         await loadVault();
       } catch (err) {
+        clearInterval(scanDurationTimer);
         console.error("Scan error:", err);
         shieldBadge.className = "status-badge threat";
         shieldText.textContent = "Scan Error";
+        activeScanPath.textContent = `Error: ${err}`;
         showToast(`Scan failed: ${err}`, "error");
       } finally {
         if (activeUnlisten) {
           activeUnlisten();
           activeUnlisten = null;
         }
-        liveBox.style.display = "none";
+        progressBar.className = "progress-bar-fill";
+        progressBar.style.width = "100%";
         scanBtn.disabled = false;
-        scanBtn.innerHTML = "🚀 Start Scan";
+        scanBtnText.textContent = "Start Scan";
       }
     }
 
@@ -1317,7 +1447,7 @@
       if (items.length === 0) {
         container.innerHTML = `
           <div class="empty-state">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <svg class="icon-lg" style="width: 48px; height: 48px;" viewBox="0 0 24 24">
               <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <h3>Quarantine Vault is Empty</h3>
@@ -1334,14 +1464,17 @@
           <div class="vault-item">
             <div class="vault-item-header">
               <div class="vault-rule">
-                ⚠️ ${escapeHtml(item.rule)}
+                <svg class="icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                ${escapeHtml(item.rule)}
               </div>
               <div class="vault-actions">
                 <button class="btn btn-secondary btn-sm" onclick="restoreThreat('${escapeHtml(item.id)}')">
-                  ♻️ Restore (Safe)
+                  <svg class="icon-sm" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                  Restore (Safe)
                 </button>
                 <button class="btn btn-danger btn-sm" onclick="deleteThreat('${escapeHtml(item.id)}')">
-                  🗑️ Delete
+                  <svg class="icon-sm" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
+                  Delete
                 </button>
               </div>
             </div>
@@ -1395,8 +1528,24 @@
       }
     }
 
+    // Auto-refresh process monitor
+    function startProcessAutoRefresh() {
+      if (processAutoRefreshTimer) return;
+      // Refresh processes every 3 seconds while on Process tab
+      processAutoRefreshTimer = setInterval(() => {
+        loadProcesses(true);
+      }, 3000);
+    }
+
+    function stopProcessAutoRefresh() {
+      if (processAutoRefreshTimer) {
+        clearInterval(processAutoRefreshTimer);
+        processAutoRefreshTimer = null;
+      }
+    }
+
     // Load System Processes
-    async function loadProcesses() {
+    async function loadProcesses(isAutoRefresh = false) {
       const invoke = getInvoke();
       const tbody = document.getElementById("processTableBody");
       const btn = document.getElementById("refreshProcessesBtn");
@@ -1407,21 +1556,29 @@
         return;
       }
 
-      btn.disabled = true;
-      btn.innerHTML = "⏳ Refreshing…";
+      if (isFetchingProcesses) return;
+      isFetchingProcesses = true;
+
+      if (!isAutoRefresh && btn) {
+        btn.disabled = true;
+      }
 
       try {
-        allProcesses = await invoke("get_system_processes");
-        allProcesses.sort((a, b) => b.cpu_usage - a.cpu_usage);
+        const processes = await invoke("get_system_processes");
+        allProcesses = processes.sort((a, b) => b.cpu_usage - a.cpu_usage);
         statusText.textContent = `Monitoring ${allProcesses.length} active process(es)`;
         renderProcesses(allProcesses);
       } catch (e) {
         console.error("Failed to load processes:", e);
-        statusText.textContent = "Error refreshing processes";
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--danger); padding: 24px;">Failed to query processes: ${escapeHtml(String(e))}</td></tr>`;
+        if (!isAutoRefresh) {
+          statusText.textContent = "Error refreshing processes";
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--danger); padding: 24px;">Failed to query processes: ${escapeHtml(String(e))}</td></tr>`;
+        }
       } finally {
-        btn.disabled = false;
-        btn.innerHTML = "🔄 Refresh Processes";
+        isFetchingProcesses = false;
+        if (!isAutoRefresh && btn) {
+          btn.disabled = false;
+        }
       }
     }
 
@@ -1438,10 +1595,16 @@
           <td style="font-weight: 600;">${escapeHtml(p.name)}</td>
           <td style="color: var(--accent); font-weight: 600;">${p.cpu_usage.toFixed(1)}%</td>
           <td>${p.memory_mb.toFixed(1)} MB</td>
-          <td>${p.is_trojan ? '<span class="badge-trojan">SUSPICIOUS</span>' : '<span class="badge-clean">✓ Verified</span>'}</td>
+          <td>
+            ${p.is_trojan
+              ? '<span class="badge-trojan">SUSPICIOUS</span>'
+              : '<span class="badge-clean"><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>'
+            }
+          </td>
           <td>
             <button class="btn btn-secondary btn-sm" onclick="killProcess(${p.pid}, '${escapeHtml(p.name)}')">
-              🛑 End Task
+              <svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+              End Task
             </button>
           </td>
         </tr>
@@ -1480,6 +1643,9 @@
       let signatures = [
         { name: "EICAR_Test_File", category: "Standard Test", description: "Industry-standard antivirus verification signature" },
         { name: "Test_Suspicious_Pattern", category: "Test Pattern", description: "Internal Sentinel AV test verification signature" },
+        { name: "Trojan_Generic_Dropper", category: "Trojan / Dropper", description: "Detects memory injection, staging downloaders, and concealed execution" },
+        { name: "Trojan_RAT_Indicator", category: "Trojan / RAT", description: "Detects Remote Access Trojans (AsyncRAT, NjRAT, Remcos, Quasar)" },
+        { name: "Trojan_InfoStealer_Vault", category: "Trojan / Stealer", description: "Detects browser credential, cookie, and cryptocurrency wallet harvesting" },
         { name: "Suspicious_Webshell", category: "Webshell / Backdoor", description: "Detects common PHP webshells (c99, r57, b374k, eval base64)" },
         { name: "Suspicious_PowerShell_Downloader", category: "Malicious Script", description: "Detects encoded PowerShell cradles, certutil, bitsadmin downloads" },
         { name: "Ransomware_Extortion_Note", category: "Ransomware", description: "Detects ransomware encryption notes and payment demands" },

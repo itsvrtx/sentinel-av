@@ -2,4 +2,7 @@
 YRX_REGENERATE_MODULES_RS = "false"
 
 [profile.dev]
-debug = 1
+debug = 0
+
+[profile.test]
+debug = 0
