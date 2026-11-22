@@ -14,6 +14,15 @@
       --shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
       --btn-shadow: 0 4px 12px rgba(9, 105, 218, 0.28);
       --btn-shadow-hover: 0 6px 18px rgba(0, 180, 216, 0.4);
+      --accent: #0969da;
+      --accent-hover: #00b4d8;
+      --danger: #dc2626;
+      --danger-hover: #f97316;
+      --success: #22c55e;
+      --warning: #eab308;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --transition: 0.2s ease;
     }
 
     [data-theme="dark"] {
@@ -26,6 +35,8 @@
       --shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
       --btn-shadow: 0 4px 14px rgba(0, 180, 216, 0.25);
       --btn-shadow-hover: 0 6px 20px rgba(0, 180, 216, 0.45);
+      --accent: #00b4d8;
+      --accent-hover: #06b6d4;
     }
 
     * { box-sizing: border-box; }
@@ -33,159 +44,277 @@
     body {
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       margin: 0;
-      padding: 28px;
+      padding: 32px;
       background: var(--bg);
       color: var(--text);
-      transition: background 0.25s ease, color 0.25s ease;
+      transition: background var(--transition), color var(--transition);
+      min-height: 100vh;
     }
 
-    .container { max-width: 780px; margin: 0 auto; }
+    .container { max-width: 1100px; margin: 0 auto; }
 
     .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 22px;
+      margin-bottom: 28px;
+      gap: 16px;
+      flex-wrap: wrap;
     }
 
-    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 14px; }
     .brand img {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
       box-shadow: var(--shadow);
+      background: var(--surface);
+      padding: 4px;
     }
-    .brand h1 { margin: 0; font-size: 24px; letter-spacing: -0.3px; }
+    .brand h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.4px; }
+    .brand .tagline { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 
     .theme-btn {
       background: var(--surface);
       color: var(--text);
       border: 1px solid var(--border);
-      padding: 8px 14px;
+      padding: 10px 16px;
       border-radius: 999px;
       cursor: pointer;
       font-size: 13px;
       font-weight: 600;
       box-shadow: var(--shadow);
-      transition: transform 0.15s ease, background 0.2s ease;
+      transition: transform 0.15s ease, background var(--transition), border-color var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .theme-btn:hover { transform: translateY(-1px); background: var(--surface-2); }
+    .theme-btn:hover { transform: translateY(-1px); background: var(--surface-2); border-color: var(--accent); }
+    .theme-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    @media (min-width: 900px) {
+      .main-grid { grid-template-columns: 1fr 420px; }
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 { margin: 0 0 16px; font-size: 16px; font-weight: 600; color: var(--text); }
 
     .scan-bar {
       display: flex;
-      gap: 10px;
-      background: var(--surface);
-      padding: 10px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-      margin-bottom: 14px;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: stretch;
     }
 
-    select, input {
-      padding: 10px 12px;
+    .path-field { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 6px; }
+    .path-field label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .path-input-wrapper { display: flex; gap: 8px; }
+    input[type="text"] {
+      flex: 1;
+      padding: 12px 14px;
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       background: var(--surface-2);
       color: var(--text);
       font-size: 14px;
       outline: none;
+      font-family: 'Consolas', 'Monaco', monospace;
+      transition: border-color var(--transition), box-shadow var(--transition);
     }
-    select { cursor: pointer; }
-    input { flex: 1; }
-    input:focus, select:focus { border-color: #00b4d8; }
+    input[type="text"]:hover { border-color: var(--accent); }
+    input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.15); }
 
     button {
-      padding: 10px 18px;
+      padding: 12px 22px;
       border: none;
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
       font-weight: 600;
       font-size: 14px;
-      transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.25s ease;
+      transition: transform 0.15s ease, box-shadow var(--transition), background var(--transition);
+      white-space: nowrap;
     }
     button:active { transform: translateY(0); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     .btn-primary {
-      background: #0969da;
+      background: var(--accent);
       color: #fff;
       box-shadow: var(--btn-shadow);
     }
-    .btn-primary:hover {
-      background: linear-gradient(135deg, #00b4d8, #0969da);
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
       box-shadow: var(--btn-shadow-hover);
       transform: translateY(-1px);
     }
 
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      border-radius: 999px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 22px;
-      box-shadow: var(--shadow);
-    }
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #22c55e;
-    }
-
-    h2 { font-size: 18px; margin: 0 0 12px; }
-
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 12px;
-      box-shadow: var(--shadow);
-    }
-
-    .empty-card {
-      text-align: center;
-      color: var(--muted);
-      padding: 28px 16px;
-      font-size: 14px;
-    }
-
-    .meta {
-      font-size: 13px;
-      color: var(--muted);
-      margin: 8px 0 14px;
-      line-height: 1.5;
-      word-break: break-all;
-    }
-
-    .actions { display: flex; gap: 10px; }
-
-    .btn-restore {
+    .btn-secondary {
       background: var(--surface-2);
       color: var(--text);
       border: 1px solid var(--border);
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
-    .btn-restore:hover {
-      background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
-      color: #0f172a;
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--border);
       transform: translateY(-1px);
     }
 
+    .btn-refresh {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+    .btn-refresh:hover:not(:disabled) { background: var(--border); }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+      margin: 16px 0 0;
+      box-shadow: var(--shadow);
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .status-pill.scanning { border-color: var(--warning); background: rgba(234, 179, 8, 0.1); }
+    .status-pill.success { border-color: var(--success); background: rgba(34, 197, 94, 0.1); }
+    .status-pill.error { border-color: var(--danger); background: rgba(220, 38, 38, 0.1); }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--success);
+      transition: background var(--transition);
+    }
+    .status-pill.scanning .dot { background: var(--warning); animation: pulse 1.5s infinite; }
+    .status-pill.error .dot { background: var(--danger); }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .scan-stats { display: flex; gap: 24px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+    .stat { display: flex; flex-direction: column; gap: 2px; }
+    .stat-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 18px; font-weight: 700; color: var(--text); }
+
+    /* Vault */
+    .vault-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 16px; flex-wrap: wrap; }
+    .vault-count { font-size: 13px; color: var(--muted); background: var(--surface-2); padding: 4px 10px; border-radius: 999px; }
+
+    .card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .card:hover { border-color: var(--accent); box-shadow: var(--shadow); }
+
+    .empty-card {
+      text-align: center;
+      color: var(--muted);
+      padding: 40px 24px;
+      font-size: 14px;
+      background: transparent;
+      border-style: dashed;
+    }
+    .empty-card svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5; }
+    .empty-card p { margin: 0 0 8px; font-weight: 500; color: var(--text); }
+    .empty-card small { font-size: 12px; }
+
+    .threat-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+    .threat-name { font-weight: 600; font-size: 14px; color: var(--danger); }
+    .threat-badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: rgba(220, 38, 38, 0.15); color: var(--danger); text-transform: uppercase; letter-spacing: 0.3px; }
+
+    .meta { font-size: 12px; color: var(--muted); margin: 8px 0 14px; line-height: 1.6; word-break: break-all; font-family: 'Consolas', 'Monaco', monospace; }
+    .meta strong { color: var(--text); margin-right: 6px; }
+
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .btn-restore {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+    .btn-restore:hover { background: var(--surface-2); border-color: var(--success); color: var(--success); transform: translateY(-1px); }
+
     .btn-delete {
-      background: #dc2626;
+      background: var(--danger);
       color: #fff;
       box-shadow: 0 4px 12px rgba(220, 38, 38, 0.28);
     }
-    .btn-delete:hover {
-      background: linear-gradient(135deg, #f97316, #dc2626);
-      box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
-      transform: translateY(-1px);
+    .btn-delete:hover { background: var(--danger-hover); box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4); transform: translateY(-1px); }
+
+    /* System Processes Table */
+    .process-table-wrapper { overflow-x: auto; }
+    .process-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .process-table th,
+    .process-table td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .process-table th {
+      font-weight: 600;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: var(--surface-2);
+      position: sticky;
+      top: 0;
+    }
+    .process-table tbody tr { transition: background var(--transition); }
+    .process-table tbody tr:hover { background: var(--surface-2); }
+    .process-table tbody tr.trojan { background: rgba(220, 38, 38, 0.08); }
+    .process-table tbody tr.trojan:hover { background: rgba(220, 38, 38, 0.15); }
+    .process-table .pid { font-family: 'Consolas', 'Monaco', monospace; color: var(--muted); }
+    .process-table .name { font-weight: 500; }
+    .process-table .cpu { color: var(--accent); font-weight: 600; }
+    .process-table .mem { color: var(--text); }
+    .process-table .trojan-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: var(--danger);
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 16px; flex-wrap: wrap; }
+
+    @media (max-width: 600px) {
+      body { padding: 20px; }
+      .scan-bar { flex-direction: column; }
+      .path-input-wrapper { flex-direction: column; }
+      .vault-header { flex-direction: column; align-items: flex-start; }
+      .panel-header { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
@@ -194,31 +323,104 @@
     <div class="header">
       <div class="brand">
         <img src="logo.png" alt="Sentinel AV" />
-        <h1>Sentinel AV</h1>
+        <div>
+          <h1>Sentinel AV</h1>
+          <span class="tagline">Open-source antivirus</span>
+        </div>
       </div>
-      <button id="themeToggle" class="theme-btn" onclick="toggleTheme()">Dark Mode</button>
+      <button id="themeToggle" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+        <span id="themeIcon">🌙</span>
+        <span id="themeText">Dark Mode</span>
+      </button>
     </div>
 
-    <div class="scan-bar">
-      <select id="folderSelect" onchange="onFolderChange()"></select>
-      <input id="folderInput" type="text" placeholder="Choose a preset or enter a custom path..." />
-      <button class="btn-primary" onclick="runScan()">Scan Folder</button>
-    </div>
+    <div class="main-grid">
+      <!-- Left Column: Scanner + Vault -->
+      <div>
+        <section class="panel scan-section" aria-labelledby="scan-title">
+          <h2 id="scan-title">Scan a Folder</h2>
+          <div class="scan-bar">
+            <div class="path-field">
+              <label for="folderInput">Target Path</label>
+              <div class="path-input-wrapper">
+                <input id="folderInput" type="text" placeholder="Enter a folder path or click Browse…" aria-label="Folder path to scan" />
+                <button class="btn-secondary" id="browseBtn" onclick="pickCustomFolder()" aria-label="Browse for folder">Browse…</button>
+              </div>
+            </div>
+            <button class="btn-primary" id="scanBtn" onclick="runScan()" aria-label="Start scan">Scan Folder</button>
+          </div>
 
-    <div class="status-pill">
-      <span id="statusDot" class="dot"></span>
-      <span id="status">Ready to scan.</span>
-    </div>
+          <div class="status-pill" id="statusPill" role="status" aria-live="polite">
+            <span id="statusDot" class="dot" aria-hidden="true"></span>
+            <span id="status">Ready to scan.</span>
+          </div>
 
-    <h2>Quarantine Vault</h2>
-    <div id="vault"></div>
+          <div class="scan-stats" id="scanStats" style="display: none;">
+            <div class="stat">
+              <span class="stat-label">Files Scanned</span>
+              <span class="stat-value" id="statFiles">0</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Duration</span>
+              <span class="stat-value" id="statTime">0 ms</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Threats Found</span>
+              <span class="stat-value" id="statThreats">0</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel vault-section" aria-labelledby="vault-title">
+          <div class="vault-header">
+            <h2 id="vault-title">Quarantine Vault</h2>
+            <span class="vault-count" id="vaultCount">0 items</span>
+          </div>
+          <div id="vault" role="list" aria-label="Quarantined threats"></div>
+        </section>
+      </div>
+
+      <!-- Right Column: System Processes -->
+      <aside>
+        <section class="panel system-section" aria-labelledby="system-title">
+          <div class="panel-header">
+            <h2 id="system-title">System Processes</h2>
+            <button class="btn-refresh" id="refreshProcessesBtn" onclick="loadProcesses()" aria-label="Refresh process list">
+              ⟳ Refresh
+            </button>
+          </div>
+          <div class="process-table-wrapper">
+            <table class="process-table" role="grid" aria-label="Running processes">
+              <thead>
+                <tr>
+                  <th scope="col">PID</th>
+                  <th scope="col">Name</th>
+                  <th scope="col">CPU %</th>
+                  <th scope="col">RAM (MB)</th>
+                  <th scope="col">Status</th>
+                </tr>
+              </thead>
+              <tbody id="processList"></tbody>
+            </table>
+          </div>
+          <div class="empty-card" id="processEmpty" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p>No processes loaded</p>
+            <small>Click Refresh to load system processes</small>
+          </div>
+        </section>
+      </aside>
+    </div>
   </div>
 
   <script>
+    // Theme handling
     function applyTheme(theme) {
       document.documentElement.setAttribute("data-theme", theme);
-      document.getElementById("themeToggle").textContent =
-        theme === "dark" ? "Light Mode" : "Dark Mode";
+      const isDark = theme === "dark";
+      document.getElementById("themeIcon").textContent = isDark ? "☀︎" : "⏾";
+      document.getElementById("themeText").textContent = isDark ? "Light Mode" : "Dark Mode";
+      document.getElementById("themeToggle").setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
       localStorage.setItem("sentinel-theme", theme);
     }
 
@@ -229,105 +431,221 @@
 
     applyTheme(localStorage.getItem("sentinel-theme") || "light");
 
-    const tauriCore = window.__TAURI__ && window.__TAURI__.core;
+    // Tauri 2 global API
+    const invoke = window.__TAURI__?.invoke;
+    const listen = window.__TAURI__?.event?.listen;
 
-    async function onFolderChange() {
-      const select = document.getElementById("folderSelect");
-      const input = document.getElementById("folderInput");
-      if (select.value === "__custom__") {
-        const picked = await tauriCore.invoke("pick_custom_folder");
-        if (picked) {
-          input.value = picked;
-        }
-      } else {
-        input.value = select.value;
+    let currentUnlisten = null;
+
+    function setStatus(message, type = "ready") {
+      const pill = document.getElementById("statusPill");
+      const status = document.getElementById("status");
+      pill.className = "status-pill";
+      if (type === "scanning") pill.classList.add("scanning");
+      else if (type === "success") pill.classList.add("success");
+      else if (type === "error") pill.classList.add("error");
+      status.textContent = message;
+    }
+
+    function showStats(show, files = 0, duration = 0, threats = 0) {
+      const el = document.getElementById("scanStats");
+      el.style.display = show ? "flex" : "none";
+      if (show) {
+        document.getElementById("statFiles").textContent = files.toLocaleString();
+        document.getElementById("statTime").textContent = duration + " ms";
+        document.getElementById("statThreats").textContent = threats;
       }
     }
 
-    async function loadFolders() {
-      if (!tauriCore) return;
-      const folders = await tauriCore.invoke("get_common_folders");
-      const select = document.getElementById("folderSelect");
-      select.innerHTML =
-        folders.map(f => `<option value="${f.path}">${f.label}</option>`).join("") +
-        `<option value="__custom__">Custom Path...</option>`;
-      onFolderChange();
+    async function pickCustomFolder() {
+      if (!invoke) return;
+      const picked = await invoke("pick_custom_folder");
+      if (picked) {
+        document.getElementById("folderInput").value = picked;
+      }
+    }
+
+    async function runScan() {
+      if (!invoke) return;
+      const target = document.getElementById("folderInput").value.trim();
+      if (!target) return;
+
+      const scanBtn = document.getElementById("scanBtn");
+      scanBtn.disabled = true;
+      scanBtn.textContent = "Scanning…";
+
+      setStatus(`Starting YARA scan on ${target}…`, "scanning");
+      showStats(false);
+
+      try {
+        if (listen) {
+          currentUnlisten = await listen("scan-progress", (event) => {
+            const { count, current_file } = event.payload;
+            setStatus(`Checked ${count} file(s) — ${escapeHtml(current_file)}`, "scanning");
+          });
+        }
+
+        const summary = await invoke("scan_folder", { target });
+        const threats = summary.quarantined.length;
+
+        setStatus(
+          threats
+            ? `Scanned ${summary.files_scanned} files in ${summary.duration_ms} ms — quarantined ${threats} threat(s).`
+            : `Scanned ${summary.files_scanned} files in ${summary.duration_ms} ms — no threats found.`,
+          threats ? "error" : "success"
+        );
+        showStats(true, summary.files_scanned, summary.duration_ms, threats);
+        await loadVault();
+      } catch (err) {
+        setStatus(`Scan error: ${escapeHtml(String(err))}`, "error");
+        showStats(false);
+      } finally {
+        if (currentUnlisten) {
+          currentUnlisten();
+          currentUnlisten = null;
+        }
+        scanBtn.disabled = false;
+        scanBtn.textContent = "Scan Folder";
+      }
     }
 
     async function loadVault() {
       const vault = document.getElementById("vault");
-      if (!tauriCore) {
-        vault.innerHTML = `<div class="card empty-card">Enable <code>"withGlobalTauri": true</code> in <code>tauri.conf.json</code> to connect the scanner.</div>`;
+      const countEl = document.getElementById("vaultCount");
+
+      if (!invoke) {
+        vault.innerHTML = `<div class="card empty-card" role="listitem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 9v3m0 3h.01M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/></svg>
+          <p>Tauri API unavailable</p>
+          <small>Enable <code>withGlobalTauri: true</code> in <code>tauri.conf.json</code></small>
+        </div>`;
+        countEl.textContent = "Unavailable";
         return;
       }
-
-      const items = await tauriCore.invoke("get_quarantined");
-      if (items.length === 0) {
-        vault.innerHTML = `<div class="card empty-card">No quarantined threats. Your system is clean.</div>`;
-        return;
-      }
-
-      vault.innerHTML = items.map(item => `
-        <div class="card">
-          <strong>Threat: ${item.rule}</strong>
-          <div class="meta">
-            Original Path: ${item.original_path}<br/>
-            SHA-256: ${item.sha256}
-          </div>
-          <div class="actions">
-            <button class="btn-restore" onclick="restoreFile('${item.id}')">Restore (Safe)</button>
-            <button class="btn-delete" onclick="deleteFile('${item.id}')">Delete Permanently</button>
-          </div>
-        </div>
-      `).join("");
-    }
-
-    async function runScan() {
-      if (!tauriCore) return;
-      const target = document.getElementById("folderInput").value.trim();
-      if (!target) return;
-
-      const statusEl = document.getElementById("status");
-      const dotEl = document.getElementById("statusDot");
-      statusEl.textContent = `Starting YARA scan on ${target}...`;
-      dotEl.style.background = "#eab308";
-
-      const unlisten = await window.__TAURI__.event.listen("scan-progress", (event) => {
-        const { count, current_file } = event.payload;
-        statusEl.textContent = `Checked ${count} file(s) — ${current_file}`;
-      });
 
       try {
-        const summary = await tauriCore.invoke("scan_folder", { target });
-        const threats = summary.quarantined.length;
-        statusEl.textContent = threats
-          ? `Scanned ${summary.files_scanned} files in ${summary.duration_ms} ms — quarantined ${threats} threat(s).`
-          : `Scanned ${summary.files_scanned} files in ${summary.duration_ms} ms — no threats found.`;
-        dotEl.style.background = threats ? "#ef4444" : "#22c55e";
-        await loadVault();
-      } catch (err) {
-        statusEl.textContent = `Scan error: ${err}`;
-        dotEl.style.background = "#ef4444";
-      } finally {
-        unlisten();
+        const items = await invoke("get_quarantined");
+        countEl.textContent = `${items.length} item${items.length !== 1 ? "s" : ""}`;
+
+        if (items.length === 0) {
+          vault.innerHTML = `<div class="card empty-card" role="listitem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p>No quarantined threats</p>
+            <small>Your system is clean.</small>
+          </div>`;
+          return;
+        }
+
+        vault.innerHTML = items.map(item => `
+          <div class="card" role="listitem">
+            <div class="threat-header">
+              <span class="threat-name">${escapeHtml(item.rule)}</span>
+              <span class="threat-badge">Quarantined</span>
+            </div>
+            <div class="meta">
+              <strong>Original:</strong> ${escapeHtml(item.original_path)}<br/>
+              <strong>SHA-256:</strong> ${escapeHtml(item.sha256)}
+            </div>
+            <div class="actions">
+              <button class="btn-restore" onclick="restoreFile('${escapeHtml(item.id)}')">Restore (Safe)</button>
+              <button class="btn-delete" onclick="deleteFile('${escapeHtml(item.id)}')">Delete Permanently</button>
+            </div>
+          </div>
+        `).join("");
+      } catch (e) {
+        console.error("Failed to load vault:", e);
+        vault.innerHTML = `<div class="card empty-card" role="listitem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 9v3m0 3h.01M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/></svg>
+          <p>Failed to load vault</p>
+          <small>${escapeHtml(String(e))}</small>
+        </div>`;
+        countEl.textContent = "Error";
       }
     }
 
     async function restoreFile(id) {
-      const path = await tauriCore.invoke("restore_item", { id });
-      document.getElementById("status").textContent = `Restored to ${path}`;
-      await loadVault();
+      if (!invoke) return;
+      try {
+        const path = await invoke("restore_item", { id });
+        setStatus(`Restored to ${escapeHtml(path)}`, "success");
+        await loadVault();
+      } catch (e) {
+        setStatus(`Restore failed: ${escapeHtml(String(e))}`, "error");
+      }
     }
 
     async function deleteFile(id) {
+      if (!invoke) return;
       if (!confirm("Permanently delete this quarantined file? This cannot be undone.")) return;
-      await tauriCore.invoke("delete_item", { id });
-      document.getElementById("status").textContent = "File permanently deleted.";
-      await loadVault();
+      try {
+        await invoke("delete_item", { id });
+        setStatus("File permanently deleted.", "success");
+        await loadVault();
+      } catch (e) {
+        setStatus(`Delete failed: ${escapeHtml(String(e))}`, "error");
+      }
     }
 
-    loadFolders();
+    // System Processes
+    async function loadProcesses() {
+      const tbody = document.getElementById("processList");
+      const emptyEl = document.getElementById("processEmpty");
+      const btn = document.getElementById("refreshProcessesBtn");
+
+      if (!invoke) {
+        tbody.innerHTML = "";
+        emptyEl.style.display = "block";
+        emptyEl.querySelector("p").textContent = "Tauri API unavailable";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Loading…";
+      emptyEl.style.display = "none";
+
+      try {
+        const processes = await invoke("get_system_processes");
+        if (processes.length === 0) {
+          emptyEl.style.display = "block";
+          emptyEl.querySelector("p").textContent = "No significant processes found";
+          return;
+        }
+
+        // Sort by CPU usage descending
+        processes.sort((a, b) => b.cpu_usage - a.cpu_usage);
+
+        tbody.innerHTML = processes.map(p => `
+          <tr class="${p.is_trojan ? 'trojan' : ''}">
+            <td class="pid">${p.pid}</td>
+            <td class="name">${escapeHtml(p.name)}</td>
+            <td class="cpu">${p.cpu_usage.toFixed(1)}%</td>
+            <td class="mem">${p.memory_mb.toFixed(1)}</td>
+            <td>${p.is_trojan ? '<span class="trojan-badge">TROJAN</span>' : '<span style="color:var(--success)">✓ Clean</span>'}</td>
+          </tr>
+        `).join("");
+      } catch (e) {
+        console.error("Failed to load processes:", e);
+        emptyEl.style.display = "block";
+        emptyEl.querySelector("p").textContent = "Failed to load processes";
+        emptyEl.querySelector("small").textContent = escapeHtml(String(e));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "⟳ Refresh";
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&")
+        .replace(/</g, "<")
+        .replace(/>/g, ">")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Initialize
     loadVault();
+    loadProcesses();
   </script>
 </body>
 </html>
