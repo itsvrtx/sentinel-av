@@ -222,13 +222,16 @@ fn get_system_processes() -> Result<Vec<ProcessInfo>, String> {
 
 #[tauri::command]
 fn kill_process(pid: u32) -> Result<bool, String> {
-    let mut sys = System::new_all();
+    let mut guard = SYSTEM_MONITOR.lock().map_err(|e| e.to_string())?;
+    let mut sys = guard.take().unwrap_or_else(System::new_all);
     sys.refresh_processes();
-    if let Some(proc) = sys.process(Pid::from_u32(pid)) {
+    let result = if let Some(proc) = sys.process(Pid::from_u32(pid)) {
         Ok(proc.kill())
     } else {
         Err(format!("Process with PID {pid} not found."))
-    }
+    };
+    *guard = Some(sys);
+    result
 }
 
 #[tauri::command]
