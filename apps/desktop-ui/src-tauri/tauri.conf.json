@@ -7,18 +7,22 @@
     "frontendDist": "../src"
   },
   "app": {
-  "withGlobalTauri": true,
-  "windows": [
-    {
-      "title": "Sentinel AV",
-      "width": 800,
-      "height": 600
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Sentinel AV — Next-Gen Antivirus",
+        "width": 1140,
+        "height": 780,
+        "minWidth": 850,
+        "minHeight": 600,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": null
     }
-  ],
-  "security": {
-    "csp": null
-  }
-},
+  },
   "bundle": {
     "active": true,
     "targets": "all",

@@ -1,0 +1,5 @@
+[env]
+YRX_REGENERATE_MODULES_RS = "false"
+
+[profile.dev]
+debug = 1

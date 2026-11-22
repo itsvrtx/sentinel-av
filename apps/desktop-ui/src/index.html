@@ -2,162 +2,411 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Sentinel AV</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sentinel AV — Next-Gen Antivirus</title>
   <style>
     :root {
-      --bg: #f3f6fb;
-      --surface: #ffffff;
-      --surface-2: #f8fafc;
-      --border: #dce3ec;
-      --text: #0f172a;
-      --muted: #64748b;
-      --shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
-      --btn-shadow: 0 4px 12px rgba(9, 105, 218, 0.28);
-      --btn-shadow-hover: 0 6px 18px rgba(0, 180, 216, 0.4);
-      --accent: #0969da;
-      --accent-hover: #00b4d8;
-      --danger: #dc2626;
-      --danger-hover: #f97316;
-      --success: #22c55e;
-      --warning: #eab308;
+      --bg: #090d16;
+      --surface: #111827;
+      --surface-2: #1a2234;
+      --surface-3: #242f46;
+      --border: #263349;
+      --border-accent: rgba(56, 189, 248, 0.3);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #0ea5e9;
+      --accent-hover: #38bdf8;
+      --accent-glow: rgba(14, 165, 233, 0.25);
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --danger-bg: rgba(239, 68, 68, 0.12);
+      --success: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.12);
+      --warning: #f59e0b;
+      --warning-bg: rgba(245, 158, 11, 0.12);
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
       --radius: 12px;
       --radius-sm: 8px;
+      --font-mono: 'Consolas', 'Courier New', monospace;
       --transition: 0.2s ease;
     }
 
-    [data-theme="dark"] {
-      --bg: #0b1120;
-      --surface: #111827;
-      --surface-2: #1e293b;
-      --border: #263349;
-      --text: #f1f5f9;
-      --muted: #94a3b8;
-      --shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-      --btn-shadow: 0 4px 14px rgba(0, 180, 216, 0.25);
-      --btn-shadow-hover: 0 6px 20px rgba(0, 180, 216, 0.45);
-      --accent: #00b4d8;
-      --accent-hover: #06b6d4;
+    [data-theme="light"] {
+      --bg: #f4f6fa;
+      --surface: #ffffff;
+      --surface-2: #f1f5f9;
+      --surface-3: #e2e8f0;
+      --border: #cbd5e1;
+      --border-accent: rgba(14, 165, 233, 0.4);
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      --accent-glow: rgba(2, 132, 199, 0.2);
+      --danger: #dc2626;
+      --danger-hover: #b91c1c;
+      --danger-bg: rgba(220, 38, 38, 0.1);
+      --success: #059669;
+      --success-bg: rgba(5, 150, 105, 0.1);
+      --warning: #d97706;
+      --warning-bg: rgba(217, 119, 6, 0.1);
+      --shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      margin: 0;
-      padding: 32px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
-      transition: background var(--transition), color var(--transition);
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      transition: background var(--transition), color var(--transition);
     }
 
-    .container { max-width: 1100px; margin: 0 auto; }
-
-    .header {
+    /* App Header */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 28px;
       gap: 16px;
-      flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
-    .brand { display: flex; align-items: center; gap: 14px; }
-    .brand img {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      box-shadow: var(--shadow);
-      background: var(--surface);
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-accent);
       padding: 4px;
+      box-shadow: 0 0 12px var(--accent-glow);
     }
-    .brand h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.4px; }
-    .brand .tagline { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    .theme-btn {
-      background: var(--surface);
-      color: var(--text);
-      border: 1px solid var(--border);
-      padding: 10px 16px;
-      border-radius: 999px;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      box-shadow: var(--shadow);
-      transition: transform 0.15s ease, background var(--transition), border-color var(--transition);
+    .brand-title {
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .theme-btn:hover { transform: translateY(-1px); background: var(--surface-2); border-color: var(--accent); }
-    .theme-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-    .main-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 24px;
-    }
-    @media (min-width: 900px) {
-      .main-grid { grid-template-columns: 1fr 420px; }
+    .version-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: var(--surface-3);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
+    .brand-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: var(--success-bg);
+      border: 1px solid var(--success);
+      color: var(--success);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-badge.scanning {
+      background: var(--warning-bg);
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+
+    .status-badge.threat {
+      background: var(--danger-bg);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .status-badge.scanning .pulse-dot {
+      animation: pulseAnim 1.2s infinite ease-in-out;
+    }
+
+    @keyframes pulseAnim {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(1.3); }
+    }
+
+    .icon-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      font-size: 15px;
+    }
+
+    .icon-btn:hover {
+      background: var(--surface-3);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    /* Navigation Bar */
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .nav-tab {
+      padding: 12px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-tab:hover {
+      color: var(--text);
+    }
+
+    .nav-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .nav-badge {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: var(--surface-3);
+      color: var(--text);
+    }
+
+    .nav-tab.active .nav-badge {
+      background: var(--accent-glow);
+      color: var(--accent);
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      padding: 24px 28px;
+      max-width: 1240px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Card Panels */
     .panel {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 24px;
       box-shadow: var(--shadow);
+      margin-bottom: 24px;
     }
 
-    .panel h2 { margin: 0 0 16px; font-size: 16px; font-weight: 600; color: var(--text); }
-
-    .scan-bar {
+    .panel-header {
       display: flex;
-      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      gap: 16px;
       flex-wrap: wrap;
-      align-items: stretch;
     }
 
-    .path-field { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 6px; }
-    .path-field label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    .path-input-wrapper { display: flex; gap: 8px; }
-    input[type="text"] {
-      flex: 1;
-      padding: 12px 14px;
+    .panel-title {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Quick Shortcuts Grid */
+    .shortcuts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .shortcut-card {
+      background: var(--surface-2);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      background: var(--surface-2);
-      color: var(--text);
-      font-size: 14px;
-      outline: none;
-      font-family: 'Consolas', 'Monaco', monospace;
-      transition: border-color var(--transition), box-shadow var(--transition);
-    }
-    input[type="text"]:hover { border-color: var(--accent); }
-    input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.15); }
-
-    button {
-      padding: 12px 22px;
-      border: none;
-      border-radius: var(--radius-sm);
+      padding: 14px 16px;
       cursor: pointer;
+      transition: all var(--transition);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-align: left;
+    }
+
+    .shortcut-card:hover {
+      background: var(--surface-3);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .shortcut-card.highlight {
+      border-color: var(--accent);
+      background: rgba(14, 165, 233, 0.08);
+    }
+
+    .shortcut-icon {
+      font-size: 20px;
+    }
+
+    .shortcut-label {
+      font-size: 13px;
       font-weight: 600;
-      font-size: 14px;
-      transition: transform 0.15s ease, box-shadow var(--transition), background var(--transition);
+      color: var(--text);
+    }
+
+    .shortcut-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: var(--font-mono);
+    }
+
+    /* Target Path Input Bar */
+    .scan-input-group {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .path-input-wrapper {
+      flex: 1;
+      min-width: 280px;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .path-input {
+      width: 100%;
+      padding: 12px 16px;
+      padding-right: 40px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 13px;
+      font-family: var(--font-mono);
+      outline: none;
+      transition: all var(--transition);
+    }
+
+    .path-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 12px 22px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all var(--transition);
+      border: none;
+      outline: none;
       white-space: nowrap;
     }
-    button:active { transform: translateY(0); }
-    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
 
     .btn-primary {
       background: var(--accent);
-      color: #fff;
-      box-shadow: var(--btn-shadow);
+      color: #ffffff;
+      box-shadow: 0 4px 14px var(--accent-glow);
     }
+
     .btn-primary:hover:not(:disabled) {
       background: var(--accent-hover);
-      box-shadow: var(--btn-shadow-hover);
+      box-shadow: 0 6px 20px var(--accent-glow);
       transform: translateY(-1px);
     }
 
@@ -165,487 +414,1118 @@
       background: var(--surface-2);
       color: var(--text);
       border: 1px solid var(--border);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
+
     .btn-secondary:hover:not(:disabled) {
-      background: var(--border);
+      background: var(--surface-3);
+      border-color: var(--border-accent);
       transform: translateY(-1px);
     }
 
-    .btn-refresh {
+    .btn-danger {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: var(--danger-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    /* Live Progress Card */
+    .scan-live-box {
       background: var(--surface-2);
-      color: var(--text);
       border: 1px solid var(--border);
-      padding: 10px 14px;
-      font-size: 13px;
+      border-radius: var(--radius-sm);
+      padding: 18px 20px;
+      margin-top: 14px;
+      display: none;
     }
-    .btn-refresh:hover:not(:disabled) { background: var(--border); }
 
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 16px;
+    .progress-bar-container {
+      height: 8px;
+      background: var(--surface-3);
       border-radius: 999px;
-      background: var(--surface);
+      overflow: hidden;
+      margin: 12px 0 10px;
+      position: relative;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+      width: 0%;
+      transition: width 0.15s ease;
+      border-radius: 999px;
+      position: relative;
+    }
+
+    .progress-bar-fill.indeterminate {
+      width: 35%;
+      animation: indeterminate 1.4s infinite ease-in-out;
+    }
+
+    @keyframes indeterminate {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .current-file-ticker {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-top: 6px;
+    }
+
+    /* Scan Stats Summary Cards */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .stat-card {
+      background: var(--surface-2);
       border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .stat-value.threat {
+      color: var(--danger);
+    }
+
+    .stat-value.clean {
+      color: var(--success);
+    }
+
+    /* Live Findings Feed */
+    .findings-section {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .threat-card {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .threat-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .threat-title {
+      font-weight: 700;
+      color: var(--danger);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .threat-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--danger);
+      color: #fff;
+      text-transform: uppercase;
+    }
+
+    .threat-path {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    .threat-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      word-break: break-all;
+    }
+
+    /* Vault Table & Cards */
+    .vault-toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 18px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      padding: 8px 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
       font-size: 13px;
-      color: var(--muted);
-      margin: 16px 0 0;
+      outline: none;
+      min-width: 240px;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+    }
+
+    .vault-item {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 18px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all var(--transition);
+    }
+
+    .vault-item:hover {
+      border-color: var(--accent);
       box-shadow: var(--shadow);
-      transition: background var(--transition), border-color var(--transition);
     }
-    .status-pill.scanning { border-color: var(--warning); background: rgba(234, 179, 8, 0.1); }
-    .status-pill.success { border-color: var(--success); background: rgba(34, 197, 94, 0.1); }
-    .status-pill.error { border-color: var(--danger); background: rgba(220, 38, 38, 0.1); }
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--success);
-      transition: background var(--transition);
+
+    .vault-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
     }
-    .status-pill.scanning .dot { background: var(--warning); animation: pulse 1.5s infinite; }
-    .status-pill.error .dot { background: var(--danger); }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-    .scan-stats { display: flex; gap: 24px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); flex-wrap: wrap; }
-    .stat { display: flex; flex-direction: column; gap: 2px; }
-    .stat-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-    .stat-value { font-size: 18px; font-weight: 700; color: var(--text); }
+    .vault-rule {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--danger);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-    /* Vault */
-    .vault-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 16px; flex-wrap: wrap; }
-    .vault-count { font-size: 13px; color: var(--muted); background: var(--surface-2); padding: 4px 10px; border-radius: 999px; }
+    .vault-actions {
+      display: flex;
+      gap: 8px;
+    }
 
-    .card {
+    .empty-state {
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--text-muted);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      background: transparent;
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      font-size: 15px;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .empty-state p {
+      font-size: 13px;
+    }
+
+    /* Process Table */
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    th {
+      background: var(--surface-2);
+      padding: 12px 14px;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--surface-2); }
+
+    tr.trojan-row {
+      background: var(--danger-bg);
+    }
+
+    tr.trojan-row:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    .pid-cell {
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .badge-trojan {
+      background: var(--danger);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-clean {
+      color: var(--success);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* Signatures list */
+    .signature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .sig-card {
       background: var(--surface-2);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       padding: 16px;
-      margin-bottom: 12px;
-      transition: border-color var(--transition), box-shadow var(--transition);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
     }
-    .card:hover { border-color: var(--accent); box-shadow: var(--shadow); }
 
-    .empty-card {
-      text-align: center;
-      color: var(--muted);
-      padding: 40px 24px;
+    .sig-name {
       font-size: 14px;
-      background: transparent;
-      border-style: dashed;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: var(--font-mono);
     }
-    .empty-card svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5; }
-    .empty-card p { margin: 0 0 8px; font-weight: 500; color: var(--text); }
-    .empty-card small { font-size: 12px; }
 
-    .threat-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
-    .threat-name { font-weight: 600; font-size: 14px; color: var(--danger); }
-    .threat-badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: rgba(220, 38, 38, 0.15); color: var(--danger); text-transform: uppercase; letter-spacing: 0.3px; }
-
-    .meta { font-size: 12px; color: var(--muted); margin: 8px 0 14px; line-height: 1.6; word-break: break-all; font-family: 'Consolas', 'Monaco', monospace; }
-    .meta strong { color: var(--text); margin-right: 6px; }
-
-    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
-
-    .btn-restore {
-      background: var(--surface);
-      color: var(--text);
-      border: 1px solid var(--border);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    }
-    .btn-restore:hover { background: var(--surface-2); border-color: var(--success); color: var(--success); transform: translateY(-1px); }
-
-    .btn-delete {
-      background: var(--danger);
-      color: #fff;
-      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.28);
-    }
-    .btn-delete:hover { background: var(--danger-hover); box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4); transform: translateY(-1px); }
-
-    /* System Processes Table */
-    .process-table-wrapper { overflow-x: auto; }
-    .process-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    .process-table th,
-    .process-table td {
-      padding: 10px 12px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-    }
-    .process-table th {
-      font-weight: 600;
-      color: var(--muted);
+    .sig-category {
       font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      background: var(--surface-2);
-      position: sticky;
-      top: 0;
-    }
-    .process-table tbody tr { transition: background var(--transition); }
-    .process-table tbody tr:hover { background: var(--surface-2); }
-    .process-table tbody tr.trojan { background: rgba(220, 38, 38, 0.08); }
-    .process-table tbody tr.trojan:hover { background: rgba(220, 38, 38, 0.15); }
-    .process-table .pid { font-family: 'Consolas', 'Monaco', monospace; color: var(--muted); }
-    .process-table .name { font-weight: 500; }
-    .process-table .cpu { color: var(--accent); font-weight: 600; }
-    .process-table .mem { color: var(--text); }
-    .process-table .trojan-badge {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: var(--danger);
-      color: #fff;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
     }
 
-    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 16px; flex-wrap: wrap; }
+    .sig-desc {
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.4;
+    }
 
-    @media (max-width: 600px) {
-      body { padding: 20px; }
-      .scan-bar { flex-direction: column; }
-      .path-input-wrapper { flex-direction: column; }
-      .vault-header { flex-direction: column; align-items: flex-start; }
-      .panel-header { flex-direction: column; align-items: flex-start; }
+    /* Modal / Alert Notification */
+    .toast-banner {
+      position: fixed;
+      bottom: 24px;
+      right: 28px;
+      padding: 14px 20px;
+      border-radius: var(--radius-sm);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .toast-success { background: var(--success); color: #fff; }
+    .toast-error { background: var(--danger); color: #fff; }
+    .toast-info { background: var(--accent); color: #fff; }
+
+    @media (max-width: 768px) {
+      header, nav, main { padding-left: 16px; padding-right: 16px; }
+      .shortcuts-grid { grid-template-columns: 1fr 1fr; }
+      .scan-input-group { flex-direction: column; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div class="brand">
-        <img src="logo.png" alt="Sentinel AV" />
-        <div>
-          <h1>Sentinel AV</h1>
-          <span class="tagline">Open-source antivirus</span>
+  <!-- Top App Header -->
+  <header>
+    <div class="brand-section">
+      <img src="logo.png" alt="Sentinel AV Logo" class="brand-logo" onerror="this.style.display='none'" />
+      <div>
+        <div class="brand-title">
+          Sentinel AV
+          <span class="version-tag">v0.1.0</span>
         </div>
+        <div class="brand-subtitle">High-Performance Antivirus Engine</div>
       </div>
-      <button id="themeToggle" class="theme-btn" onclick="toggleTheme()" aria-label="Toggle theme">
-        <span id="themeIcon">🌙</span>
-        <span id="themeText">Dark Mode</span>
+    </div>
+    <div class="header-actions">
+      <div class="status-badge" id="systemShieldBadge">
+        <span class="pulse-dot"></span>
+        <span id="systemShieldText">Shield Active</span>
+      </div>
+      <button class="icon-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+        <span id="themeIcon">☀️</span>
       </button>
     </div>
+  </header>
 
-    <div class="main-grid">
-      <!-- Left Column: Scanner + Vault -->
-      <div>
-        <section class="panel scan-section" aria-labelledby="scan-title">
-          <h2 id="scan-title">Scan a Folder</h2>
-          <div class="scan-bar">
-            <div class="path-field">
-              <label for="folderInput">Target Path</label>
-              <div class="path-input-wrapper">
-                <input id="folderInput" type="text" placeholder="Enter a folder path or click Browse…" aria-label="Folder path to scan" />
-                <button class="btn-secondary" id="browseBtn" onclick="pickCustomFolder()" aria-label="Browse for folder">Browse…</button>
-              </div>
-            </div>
-            <button class="btn-primary" id="scanBtn" onclick="runScan()" aria-label="Start scan">Scan Folder</button>
-          </div>
-
-          <div class="status-pill" id="statusPill" role="status" aria-live="polite">
-            <span id="statusDot" class="dot" aria-hidden="true"></span>
-            <span id="status">Ready to scan.</span>
-          </div>
-
-          <div class="scan-stats" id="scanStats" style="display: none;">
-            <div class="stat">
-              <span class="stat-label">Files Scanned</span>
-              <span class="stat-value" id="statFiles">0</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Duration</span>
-              <span class="stat-value" id="statTime">0 ms</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Threats Found</span>
-              <span class="stat-value" id="statThreats">0</span>
-            </div>
-          </div>
-        </section>
-
-        <section class="panel vault-section" aria-labelledby="vault-title">
-          <div class="vault-header">
-            <h2 id="vault-title">Quarantine Vault</h2>
-            <span class="vault-count" id="vaultCount">0 items</span>
-          </div>
-          <div id="vault" role="list" aria-label="Quarantined threats"></div>
-        </section>
-      </div>
-
-      <!-- Right Column: System Processes -->
-      <aside>
-        <section class="panel system-section" aria-labelledby="system-title">
-          <div class="panel-header">
-            <h2 id="system-title">System Processes</h2>
-            <button class="btn-refresh" id="refreshProcessesBtn" onclick="loadProcesses()" aria-label="Refresh process list">
-              ⟳ Refresh
-            </button>
-          </div>
-          <div class="process-table-wrapper">
-            <table class="process-table" role="grid" aria-label="Running processes">
-              <thead>
-                <tr>
-                  <th scope="col">PID</th>
-                  <th scope="col">Name</th>
-                  <th scope="col">CPU %</th>
-                  <th scope="col">RAM (MB)</th>
-                  <th scope="col">Status</th>
-                </tr>
-              </thead>
-              <tbody id="processList"></tbody>
-            </table>
-          </div>
-          <div class="empty-card" id="processEmpty" style="display: none;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <p>No processes loaded</p>
-            <small>Click Refresh to load system processes</small>
-          </div>
-        </section>
-      </aside>
+  <!-- Navigation Tabs -->
+  <nav role="tablist">
+    <div class="nav-tab active" id="tabNavScanner" onclick="switchTab('scanner')" role="tab">
+      🛡️ Threat Scanner
     </div>
-  </div>
+    <div class="nav-tab" id="tabNavVault" onclick="switchTab('vault')" role="tab">
+      📦 Quarantine Vault
+      <span class="nav-badge" id="vaultBadgeCount">0</span>
+    </div>
+    <div class="nav-tab" id="tabNavProcesses" onclick="switchTab('processes')" role="tab">
+      ⚡ Process Monitor
+    </div>
+    <div class="nav-tab" id="tabNavSignatures" onclick="switchTab('signatures')" role="tab">
+      📋 Signatures
+    </div>
+  </nav>
+
+  <!-- Main View -->
+  <main>
+    <!-- TAB 1: THREAT SCANNER -->
+    <div id="tabScanner" class="tab-content active">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">🛡️ On-Demand File & Folder Scanner</h2>
+            <p class="panel-subtitle">Select a target folder or choose a quick location to scan with YARA pattern matching</p>
+          </div>
+        </div>
+
+        <!-- Quick Location Shortcuts -->
+        <div class="shortcuts-grid" id="shortcutsContainer">
+          <button class="shortcut-card" onclick="selectPath('test_lab')">
+            <span class="shortcut-icon">🧪</span>
+            <span class="shortcut-label">Test Lab (Demo)</span>
+            <span class="shortcut-sub">test_lab/</span>
+          </button>
+          <button class="shortcut-card" onclick="selectPath('downloads')">
+            <span class="shortcut-icon">📥</span>
+            <span class="shortcut-label">Downloads</span>
+            <span class="shortcut-sub" id="subDownloads">Loading...</span>
+          </button>
+          <button class="shortcut-card" onclick="selectPath('desktop')">
+            <span class="shortcut-icon">🖥️</span>
+            <span class="shortcut-label">Desktop</span>
+            <span class="shortcut-sub" id="subDesktop">Loading...</span>
+          </button>
+          <button class="shortcut-card" onclick="selectPath('documents')">
+            <span class="shortcut-icon">📄</span>
+            <span class="shortcut-label">Documents</span>
+            <span class="shortcut-sub" id="subDocuments">Loading...</span>
+          </button>
+        </div>
+
+        <!-- Custom Target Input Bar -->
+        <div class="scan-input-group">
+          <div class="path-input-wrapper">
+            <input
+              type="text"
+              id="targetInput"
+              class="path-input"
+              placeholder="Select shortcut above or click Browse…"
+              aria-label="Target directory to scan"
+            />
+          </div>
+          <button class="btn btn-secondary" onclick="browseFolder()">
+            📂 Browse…
+          </button>
+          <button class="btn btn-primary" id="startScanBtn" onclick="startScan()">
+            🚀 Start Scan
+          </button>
+        </div>
+
+        <!-- Live Scan Progress Section -->
+        <div class="scan-live-box" id="scanLiveBox">
+          <div class="progress-meta">
+            <span id="scanStatusTitle" style="font-weight: 700; color: var(--text);">Scanning in progress…</span>
+            <span id="scanFileCounter">0 files checked</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill indeterminate" id="scanProgressBar"></div>
+          </div>
+          <div class="current-file-ticker" id="currentFileTicker">Initializing scanner engine...</div>
+        </div>
+
+        <!-- Stats Summary Section -->
+        <div class="stats-row" id="scanStatsRow" style="display: none;">
+          <div class="stat-card">
+            <span class="stat-label">Files Analyzed</span>
+            <span class="stat-value" id="statFilesScanned">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Scan Duration</span>
+            <span class="stat-value" id="statDuration">0 ms</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Threats Neutralized</span>
+            <span class="stat-value clean" id="statThreatsCount">0</span>
+          </div>
+        </div>
+
+        <!-- Live Threats Finding Feed -->
+        <div class="findings-section" id="findingsSection">
+          <h3 style="font-size: 14px; margin-bottom: 12px; color: var(--danger);">⚠️ Threats Detected & Quarantined:</h3>
+          <div id="findingsList"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- TAB 2: QUARANTINE VAULT -->
+    <div id="tabVault" class="tab-content">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">📦 Quarantine Vault</h2>
+            <p class="panel-subtitle">Isolated threats neutralized via XOR byte masking. Safe to review, restore, or delete.</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="loadVault()">
+            🔄 Refresh Vault
+          </button>
+        </div>
+
+        <div class="vault-toolbar">
+          <input
+            type="text"
+            id="vaultSearchInput"
+            class="search-input"
+            placeholder="Search by file name or rule..."
+            oninput="filterVault()"
+          />
+          <span style="font-size: 12px; color: var(--text-muted);" id="vaultStatusText">
+            0 items in quarantine
+          </span>
+        </div>
+
+        <div id="vaultListContainer"></div>
+      </section>
+    </div>
+
+    <!-- TAB 3: SYSTEM PROCESSES -->
+    <div id="tabProcesses" class="tab-content">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">⚡ Real-Time Process Monitor</h2>
+            <p class="panel-subtitle">Monitor running system tasks for suspicious names, anomalous memory, or trojan patterns.</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="refreshProcessesBtn" onclick="loadProcesses()">
+            🔄 Refresh Processes
+          </button>
+        </div>
+
+        <div class="vault-toolbar">
+          <input
+            type="text"
+            id="processSearchInput"
+            class="search-input"
+            placeholder="Filter processes by name or PID..."
+            oninput="filterProcesses()"
+          />
+          <span style="font-size: 12px; color: var(--text-muted);" id="processStatusText">
+            Loading system tasks...
+          </span>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>PID</th>
+                <th>Process Name</th>
+                <th>CPU %</th>
+                <th>Memory</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="processTableBody">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                  Loading active processes...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- TAB 4: SIGNATURES DATABASE -->
+    <div id="tabSignatures" class="tab-content">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">📋 Built-In Threat Signature Database</h2>
+            <p class="panel-subtitle">Compiled YARA-X rules actively protecting your files during scans.</p>
+          </div>
+        </div>
+        <div class="signature-grid" id="signatureGrid"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Toast Notification Banner -->
+  <div class="toast-banner" id="toastBanner"></div>
 
   <script>
-    // Theme handling
+    // Robust Tauri 2 API detection
+    const getInvoke = () => window.__TAURI__?.core?.invoke || window.__TAURI__?.invoke || null;
+    const getListen = () => window.__TAURI__?.event?.listen || null;
+
+    let commonFolders = [];
+    let allVaultItems = [];
+    let allProcesses = [];
+    let activeUnlisten = null;
+
+    // Theme Management
+    function initTheme() {
+      const saved = localStorage.getItem("sentinel-theme") || "dark";
+      applyTheme(saved);
+    }
+
     function applyTheme(theme) {
       document.documentElement.setAttribute("data-theme", theme);
       const isDark = theme === "dark";
-      document.getElementById("themeIcon").textContent = isDark ? "☀︎" : "⏾";
-      document.getElementById("themeText").textContent = isDark ? "Light Mode" : "Dark Mode";
-      document.getElementById("themeToggle").setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+      document.getElementById("themeIcon").textContent = isDark ? "☀️" : "🌙";
       localStorage.setItem("sentinel-theme", theme);
     }
 
     function toggleTheme() {
-      const current = document.documentElement.getAttribute("data-theme") || "light";
+      const current = document.documentElement.getAttribute("data-theme") || "dark";
       applyTheme(current === "dark" ? "light" : "dark");
     }
 
-    applyTheme(localStorage.getItem("sentinel-theme") || "light");
-
-    // Tauri 2 global API
-    const invoke = window.__TAURI__?.invoke;
-    const listen = window.__TAURI__?.event?.listen;
-
-    let currentUnlisten = null;
-
-    function setStatus(message, type = "ready") {
-      const pill = document.getElementById("statusPill");
-      const status = document.getElementById("status");
-      pill.className = "status-pill";
-      if (type === "scanning") pill.classList.add("scanning");
-      else if (type === "success") pill.classList.add("success");
-      else if (type === "error") pill.classList.add("error");
-      status.textContent = message;
-    }
-
-    function showStats(show, files = 0, duration = 0, threats = 0) {
-      const el = document.getElementById("scanStats");
-      el.style.display = show ? "flex" : "none";
-      if (show) {
-        document.getElementById("statFiles").textContent = files.toLocaleString();
-        document.getElementById("statTime").textContent = duration + " ms";
-        document.getElementById("statThreats").textContent = threats;
-      }
-    }
-
-    async function pickCustomFolder() {
-      if (!invoke) return;
-      const picked = await invoke("pick_custom_folder");
-      if (picked) {
-        document.getElementById("folderInput").value = picked;
-      }
-    }
-
-    async function runScan() {
-      if (!invoke) return;
-      const target = document.getElementById("folderInput").value.trim();
-      if (!target) return;
-
-      const scanBtn = document.getElementById("scanBtn");
-      scanBtn.disabled = true;
-      scanBtn.textContent = "Scanning…";
-
-      setStatus(`Starting YARA scan on ${target}…`, "scanning");
-      showStats(false);
-
-      try {
-        if (listen) {
-          currentUnlisten = await listen("scan-progress", (event) => {
-            const { count, current_file } = event.payload;
-            setStatus(`Checked ${count} file(s) — ${escapeHtml(current_file)}`, "scanning");
-          });
+    // Tab Navigation
+    function switchTab(tabId) {
+      const tabs = ["scanner", "vault", "processes", "signatures"];
+      tabs.forEach(t => {
+        const navEl = document.getElementById(`tabNav${capitalize(t)}`);
+        const contentEl = document.getElementById(`tab${capitalize(t)}`);
+        if (t === tabId) {
+          navEl?.classList.add("active");
+          contentEl?.classList.add("active");
+        } else {
+          navEl?.classList.remove("active");
+          contentEl?.classList.remove("active");
         }
+      });
 
-        const summary = await invoke("scan_folder", { target });
-        const threats = summary.quarantined.length;
-
-        setStatus(
-          threats
-            ? `Scanned ${summary.files_scanned} files in ${summary.duration_ms} ms — quarantined ${threats} threat(s).`
-            : `Scanned ${summary.files_scanned} files in ${summary.duration_ms} ms — no threats found.`,
-          threats ? "error" : "success"
-        );
-        showStats(true, summary.files_scanned, summary.duration_ms, threats);
-        await loadVault();
-      } catch (err) {
-        setStatus(`Scan error: ${escapeHtml(String(err))}`, "error");
-        showStats(false);
-      } finally {
-        if (currentUnlisten) {
-          currentUnlisten();
-          currentUnlisten = null;
-        }
-        scanBtn.disabled = false;
-        scanBtn.textContent = "Scan Folder";
-      }
+      if (tabId === "vault") loadVault();
+      if (tabId === "processes") loadProcesses();
+      if (tabId === "signatures") loadSignatures();
     }
 
-    async function loadVault() {
-      const vault = document.getElementById("vault");
-      const countEl = document.getElementById("vaultCount");
+    function capitalize(s) {
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
 
+    function showToast(message, type = "info") {
+      const toast = document.getElementById("toastBanner");
+      toast.className = `toast-banner toast-${type}`;
+      toast.textContent = message;
+      toast.style.display = "flex";
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 4000);
+    }
+
+    // Load Common Folders
+    async function loadCommonFolders() {
+      const invoke = getInvoke();
       if (!invoke) {
-        vault.innerHTML = `<div class="card empty-card" role="listitem">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 9v3m0 3h.01M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/></svg>
-          <p>Tauri API unavailable</p>
-          <small>Enable <code>withGlobalTauri: true</code> in <code>tauri.conf.json</code></small>
-        </div>`;
-        countEl.textContent = "Unavailable";
+        document.getElementById("subDownloads").textContent = "~/Downloads";
+        document.getElementById("subDesktop").textContent = "~/Desktop";
+        document.getElementById("subDocuments").textContent = "~/Documents";
         return;
       }
 
       try {
-        const items = await invoke("get_quarantined");
-        countEl.textContent = `${items.length} item${items.length !== 1 ? "s" : ""}`;
+        commonFolders = await invoke("get_common_folders");
+        const shortcutsContainer = document.getElementById("shortcutsContainer");
+        shortcutsContainer.innerHTML = "";
 
-        if (items.length === 0) {
-          vault.innerHTML = `<div class="card empty-card" role="listitem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <p>No quarantined threats</p>
-            <small>Your system is clean.</small>
-          </div>`;
-          return;
+        commonFolders.forEach(folder => {
+          let icon = "📁";
+          const labelLower = folder.label.toLowerCase();
+          if (labelLower.includes("download")) icon = "📥";
+          else if (labelLower.includes("desktop")) icon = "🖥️";
+          else if (labelLower.includes("document")) icon = "📄";
+          else if (labelLower.includes("test")) icon = "🧪";
+          else if (labelLower.includes("user")) icon = "🏠";
+
+          const card = document.createElement("button");
+          card.className = "shortcut-card" + (labelLower.includes("test") ? " highlight" : "");
+          card.onclick = () => selectPath(folder.path);
+          card.innerHTML = `
+            <span class="shortcut-icon">${icon}</span>
+            <span class="shortcut-label">${escapeHtml(folder.label)}</span>
+            <span class="shortcut-sub" title="${escapeHtml(folder.path)}">${escapeHtml(folder.path)}</span>
+          `;
+          shortcutsContainer.appendChild(card);
+        });
+
+        // Pre-select test_lab if available, otherwise first folder
+        const testLab = commonFolders.find(f => f.label.toLowerCase().includes("test"));
+        if (testLab) {
+          selectPath(testLab.path);
+        } else if (commonFolders.length > 0) {
+          selectPath(commonFolders[0].path);
         }
-
-        vault.innerHTML = items.map(item => `
-          <div class="card" role="listitem">
-            <div class="threat-header">
-              <span class="threat-name">${escapeHtml(item.rule)}</span>
-              <span class="threat-badge">Quarantined</span>
-            </div>
-            <div class="meta">
-              <strong>Original:</strong> ${escapeHtml(item.original_path)}<br/>
-              <strong>SHA-256:</strong> ${escapeHtml(item.sha256)}
-            </div>
-            <div class="actions">
-              <button class="btn-restore" onclick="restoreFile('${escapeHtml(item.id)}')">Restore (Safe)</button>
-              <button class="btn-delete" onclick="deleteFile('${escapeHtml(item.id)}')">Delete Permanently</button>
-            </div>
-          </div>
-        `).join("");
       } catch (e) {
-        console.error("Failed to load vault:", e);
-        vault.innerHTML = `<div class="card empty-card" role="listitem">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 9v3m0 3h.01M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/></svg>
-          <p>Failed to load vault</p>
-          <small>${escapeHtml(String(e))}</small>
-        </div>`;
-        countEl.textContent = "Error";
+        console.error("Failed to load common folders:", e);
       }
     }
 
-    async function restoreFile(id) {
-      if (!invoke) return;
+    function selectPath(path) {
+      document.getElementById("targetInput").value = path;
+    }
+
+    async function browseFolder() {
+      const invoke = getInvoke();
+      if (!invoke) {
+        showToast("Folder browser requires native desktop app environment.", "info");
+        return;
+      }
       try {
-        const path = await invoke("restore_item", { id });
-        setStatus(`Restored to ${escapeHtml(path)}`, "success");
-        await loadVault();
+        const picked = await invoke("pick_custom_folder");
+        if (picked) {
+          document.getElementById("targetInput").value = picked;
+        }
       } catch (e) {
-        setStatus(`Restore failed: ${escapeHtml(String(e))}`, "error");
+        showToast(`Failed to open folder picker: ${e}`, "error");
       }
     }
 
-    async function deleteFile(id) {
-      if (!invoke) return;
-      if (!confirm("Permanently delete this quarantined file? This cannot be undone.")) return;
-      try {
-        await invoke("delete_item", { id });
-        setStatus("File permanently deleted.", "success");
-        await loadVault();
-      } catch (e) {
-        setStatus(`Delete failed: ${escapeHtml(String(e))}`, "error");
+    // Start Scan
+    async function startScan() {
+      const target = document.getElementById("targetInput").value.trim();
+      if (!target) {
+        showToast("Please specify or select a folder path to scan.", "error");
+        return;
       }
-    }
 
-    // System Processes
-    async function loadProcesses() {
-      const tbody = document.getElementById("processList");
-      const emptyEl = document.getElementById("processEmpty");
-      const btn = document.getElementById("refreshProcessesBtn");
+      const invoke = getInvoke();
+      const listen = getListen();
+      const scanBtn = document.getElementById("startScanBtn");
+      const liveBox = document.getElementById("scanLiveBox");
+      const statsRow = document.getElementById("scanStatsRow");
+      const findingsSection = document.getElementById("findingsSection");
+      const findingsList = document.getElementById("findingsList");
+      const shieldBadge = document.getElementById("systemShieldBadge");
+      const shieldText = document.getElementById("systemShieldText");
+      const ticker = document.getElementById("currentFileTicker");
+      const fileCounter = document.getElementById("scanFileCounter");
+
+      scanBtn.disabled = true;
+      scanBtn.innerHTML = "⏳ Scanning…";
+      liveBox.style.display = "block";
+      statsRow.style.display = "none";
+      findingsSection.style.display = "none";
+      findingsList.innerHTML = "";
+
+      shieldBadge.className = "status-badge scanning";
+      shieldText.textContent = "Scanning…";
+      ticker.textContent = `Starting scan on: ${target}`;
+      fileCounter.textContent = "0 files checked";
+
+      // Subscribe to real-time scan progress events
+      if (listen) {
+        try {
+          activeUnlisten = await listen("scan-progress", (event) => {
+            const { count, current_file } = event.payload;
+            fileCounter.textContent = `${count.toLocaleString()} file(s) checked`;
+            ticker.textContent = `Analyzing: ${current_file}`;
+          });
+        } catch (e) {
+          console.warn("Could not register scan-progress listener:", e);
+        }
+      }
 
       if (!invoke) {
-        tbody.innerHTML = "";
-        emptyEl.style.display = "block";
-        emptyEl.querySelector("p").textContent = "Tauri API unavailable";
+        // Mock fallback for browser dev preview
+        setTimeout(() => {
+          liveBox.style.display = "none";
+          scanBtn.disabled = false;
+          scanBtn.innerHTML = "🚀 Start Scan";
+          shieldBadge.className = "status-badge";
+          shieldText.textContent = "Shield Active";
+          showToast("Tauri API not active in plain browser view.", "info");
+        }, 1200);
+        return;
+      }
+
+      try {
+        const summary = await invoke("scan_folder", { target });
+        const threats = summary.quarantined || [];
+
+        // Update stats
+        document.getElementById("statFilesScanned").textContent = summary.files_scanned.toLocaleString();
+        document.getElementById("statDuration").textContent = `${summary.duration_ms} ms`;
+        const threatsCountEl = document.getElementById("statThreatsCount");
+        threatsCountEl.textContent = threats.length;
+
+        if (threats.length > 0) {
+          threatsCountEl.className = "stat-value threat";
+          shieldBadge.className = "status-badge threat";
+          shieldText.textContent = `${threats.length} Threat(s) Neutralized`;
+
+          findingsSection.style.display = "block";
+          findingsList.innerHTML = threats.map(item => `
+            <div class="threat-card">
+              <div class="threat-title-row">
+                <span class="threat-title">🚨 ${escapeHtml(item.rule)}</span>
+                <span class="threat-pill">Quarantined</span>
+              </div>
+              <div class="threat-path"><strong>File:</strong> ${escapeHtml(item.original_path)}</div>
+              <div class="threat-meta"><strong>SHA-256:</strong> ${escapeHtml(item.sha256)}</div>
+            </div>
+          `).join("");
+
+          showToast(`Scan complete: ${threats.length} threat(s) neutralized and isolated in vault.`, "error");
+        } else {
+          threatsCountEl.className = "stat-value clean";
+          shieldBadge.className = "status-badge";
+          shieldText.textContent = "System Clean";
+          showToast(`Scan complete: Checked ${summary.files_scanned} files. No threats found!`, "success");
+        }
+
+        statsRow.style.display = "grid";
+        await loadVault();
+      } catch (err) {
+        console.error("Scan error:", err);
+        shieldBadge.className = "status-badge threat";
+        shieldText.textContent = "Scan Error";
+        showToast(`Scan failed: ${err}`, "error");
+      } finally {
+        if (activeUnlisten) {
+          activeUnlisten();
+          activeUnlisten = null;
+        }
+        liveBox.style.display = "none";
+        scanBtn.disabled = false;
+        scanBtn.innerHTML = "🚀 Start Scan";
+      }
+    }
+
+    // Load Quarantine Vault
+    async function loadVault() {
+      const invoke = getInvoke();
+      const container = document.getElementById("vaultListContainer");
+      const badgeCount = document.getElementById("vaultBadgeCount");
+      const statusText = document.getElementById("vaultStatusText");
+
+      if (!invoke) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <h3>Tauri Backend Connecting</h3>
+            <p>Vault is available when running inside the Sentinel AV desktop app.</p>
+          </div>
+        `;
+        return;
+      }
+
+      try {
+        allVaultItems = await invoke("get_quarantined");
+        badgeCount.textContent = allVaultItems.length;
+        statusText.textContent = `${allVaultItems.length} threat${allVaultItems.length === 1 ? '' : 's'} secured in vault`;
+        renderVault(allVaultItems);
+      } catch (e) {
+        console.error("Failed to load vault:", e);
+        container.innerHTML = `<div class="empty-state"><p>Error loading vault: ${escapeHtml(String(e))}</p></div>`;
+      }
+    }
+
+    function renderVault(items) {
+      const container = document.getElementById("vaultListContainer");
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3>Quarantine Vault is Empty</h3>
+            <p>No active threats or quarantined files. Your system is safe.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = items.map(item => {
+        const sizeFormatted = item.file_size ? formatBytes(item.file_size) : "Masked";
+        const timeFormatted = item.timestamp ? new Date(item.timestamp * 1000).toLocaleString() : "Recently";
+        return `
+          <div class="vault-item">
+            <div class="vault-item-header">
+              <div class="vault-rule">
+                ⚠️ ${escapeHtml(item.rule)}
+              </div>
+              <div class="vault-actions">
+                <button class="btn btn-secondary btn-sm" onclick="restoreThreat('${escapeHtml(item.id)}')">
+                  ♻️ Restore (Safe)
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="deleteThreat('${escapeHtml(item.id)}')">
+                  🗑️ Delete
+                </button>
+              </div>
+            </div>
+            <div style="font-size: 13px; font-family: var(--font-mono); word-break: break-all;">
+              <strong>Original Path:</strong> ${escapeHtml(item.original_path)}
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); display: flex; gap: 16px; flex-wrap: wrap;">
+              <span><strong>SHA-256:</strong> ${escapeHtml(item.sha256)}</span>
+              <span><strong>Size:</strong> ${sizeFormatted}</span>
+              <span><strong>Quarantined:</strong> ${timeFormatted}</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function filterVault() {
+      const q = document.getElementById("vaultSearchInput").value.toLowerCase();
+      const filtered = allVaultItems.filter(item =>
+        item.rule.toLowerCase().includes(q) ||
+        item.original_path.toLowerCase().includes(q) ||
+        item.sha256.toLowerCase().includes(q)
+      );
+      renderVault(filtered);
+    }
+
+    async function restoreThreat(id) {
+      const invoke = getInvoke();
+      if (!invoke) return;
+      try {
+        const restoredPath = await invoke("restore_item", { id });
+        showToast(`File successfully restored to: ${restoredPath}`, "success");
+        await loadVault();
+      } catch (e) {
+        showToast(`Restore failed: ${e}`, "error");
+      }
+    }
+
+    async function deleteThreat(id) {
+      if (!confirm("Permanently delete this quarantined threat file? This action cannot be undone.")) {
+        return;
+      }
+      const invoke = getInvoke();
+      if (!invoke) return;
+      try {
+        await invoke("delete_item", { id });
+        showToast("File permanently destroyed.", "success");
+        await loadVault();
+      } catch (e) {
+        showToast(`Deletion failed: ${e}`, "error");
+      }
+    }
+
+    // Load System Processes
+    async function loadProcesses() {
+      const invoke = getInvoke();
+      const tbody = document.getElementById("processTableBody");
+      const btn = document.getElementById("refreshProcessesBtn");
+      const statusText = document.getElementById("processStatusText");
+
+      if (!invoke) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">Process monitor requires native desktop app environment.</td></tr>`;
         return;
       }
 
       btn.disabled = true;
-      btn.textContent = "Loading…";
-      emptyEl.style.display = "none";
+      btn.innerHTML = "⏳ Refreshing…";
 
       try {
-        const processes = await invoke("get_system_processes");
-        if (processes.length === 0) {
-          emptyEl.style.display = "block";
-          emptyEl.querySelector("p").textContent = "No significant processes found";
-          return;
-        }
-
-        // Sort by CPU usage descending
-        processes.sort((a, b) => b.cpu_usage - a.cpu_usage);
-
-        tbody.innerHTML = processes.map(p => `
-          <tr class="${p.is_trojan ? 'trojan' : ''}">
-            <td class="pid">${p.pid}</td>
-            <td class="name">${escapeHtml(p.name)}</td>
-            <td class="cpu">${p.cpu_usage.toFixed(1)}%</td>
-            <td class="mem">${p.memory_mb.toFixed(1)}</td>
-            <td>${p.is_trojan ? '<span class="trojan-badge">TROJAN</span>' : '<span style="color:var(--success)">✓ Clean</span>'}</td>
-          </tr>
-        `).join("");
+        allProcesses = await invoke("get_system_processes");
+        allProcesses.sort((a, b) => b.cpu_usage - a.cpu_usage);
+        statusText.textContent = `Monitoring ${allProcesses.length} active process(es)`;
+        renderProcesses(allProcesses);
       } catch (e) {
         console.error("Failed to load processes:", e);
-        emptyEl.style.display = "block";
-        emptyEl.querySelector("p").textContent = "Failed to load processes";
-        emptyEl.querySelector("small").textContent = escapeHtml(String(e));
+        statusText.textContent = "Error refreshing processes";
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--danger); padding: 24px;">Failed to query processes: ${escapeHtml(String(e))}</td></tr>`;
       } finally {
         btn.disabled = false;
-        btn.textContent = "⟳ Refresh";
+        btn.innerHTML = "🔄 Refresh Processes";
       }
+    }
+
+    function renderProcesses(list) {
+      const tbody = document.getElementById("processTableBody");
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">No matching processes found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(p => `
+        <tr class="${p.is_trojan ? 'trojan-row' : ''}">
+          <td class="pid-cell">${p.pid}</td>
+          <td style="font-weight: 600;">${escapeHtml(p.name)}</td>
+          <td style="color: var(--accent); font-weight: 600;">${p.cpu_usage.toFixed(1)}%</td>
+          <td>${p.memory_mb.toFixed(1)} MB</td>
+          <td>${p.is_trojan ? '<span class="badge-trojan">SUSPICIOUS</span>' : '<span class="badge-clean">✓ Verified</span>'}</td>
+          <td>
+            <button class="btn btn-secondary btn-sm" onclick="killProcess(${p.pid}, '${escapeHtml(p.name)}')">
+              🛑 End Task
+            </button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function filterProcesses() {
+      const q = document.getElementById("processSearchInput").value.toLowerCase();
+      const filtered = allProcesses.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        String(p.pid).includes(q)
+      );
+      renderProcesses(filtered);
+    }
+
+    async function killProcess(pid, name) {
+      if (!confirm(`Are you sure you want to terminate process "${name}" (PID: ${pid})?`)) {
+        return;
+      }
+      const invoke = getInvoke();
+      if (!invoke) return;
+      try {
+        await invoke("kill_process", { pid });
+        showToast(`Terminated process ${name} (PID: ${pid})`, "success");
+        await loadProcesses();
+      } catch (e) {
+        showToast(`Could not end task: ${e}`, "error");
+      }
+    }
+
+    // Load Active Signatures Database
+    async function loadSignatures() {
+      const invoke = getInvoke();
+      const grid = document.getElementById("signatureGrid");
+
+      let signatures = [
+        { name: "EICAR_Test_File", category: "Standard Test", description: "Industry-standard antivirus verification signature" },
+        { name: "Test_Suspicious_Pattern", category: "Test Pattern", description: "Internal Sentinel AV test verification signature" },
+        { name: "Suspicious_Webshell", category: "Webshell / Backdoor", description: "Detects common PHP webshells (c99, r57, b374k, eval base64)" },
+        { name: "Suspicious_PowerShell_Downloader", category: "Malicious Script", description: "Detects encoded PowerShell cradles, certutil, bitsadmin downloads" },
+        { name: "Ransomware_Extortion_Note", category: "Ransomware", description: "Detects ransomware encryption notes and payment demands" },
+        { name: "Suspicious_Reverse_Shell", category: "Command & Control", description: "Detects interactive netcat, bash, and python reverse shell pipes" }
+      ];
+
+      if (invoke) {
+        try {
+          const loaded = await invoke("get_active_signatures");
+          if (loaded && loaded.length > 0) signatures = loaded;
+        } catch (e) {
+          console.warn("Using default signatures display:", e);
+        }
+      }
+
+      grid.innerHTML = signatures.map(sig => `
+        <div class="sig-card">
+          <div class="sig-category">${escapeHtml(sig.category)}</div>
+          <div class="sig-name">${escapeHtml(sig.name)}</div>
+          <div class="sig-desc">${escapeHtml(sig.description)}</div>
+        </div>
+      `).join("");
+    }
+
+    // Utility Helpers
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + " B";
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+      return (bytes / (1024 * 1024)).toFixed(1) + " MB";
     }
 
     function escapeHtml(str) {
       return String(str)
-        .replace(/&/g, "&")
-        .replace(/</g, "<")
-        .replace(/>/g, ">")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
     }
 
-    // Initialize
-    loadVault();
-    loadProcesses();
+    // Initialization
+    window.addEventListener("DOMContentLoaded", () => {
+      initTheme();
+      loadCommonFolders();
+      loadVault();
+    });
   </script>
 </body>
 </html>

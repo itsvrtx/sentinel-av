@@ -1,27 +1,81 @@
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use yara_x::{Compiler, Rules, Scanner};
 
-/// Loads and compiles all .yar rule files from the rules/ directory.
-pub fn load_rules(rules_dir: &Path) -> Result<Rules, String> {
-    let mut compiler = Compiler::new();
-    let entries = fs::read_dir(rules_dir).map_err(|e| format!("Cannot read rules dir: {e}"))?;
+const EMBEDDED_BASIC: &str = include_str!("../../../rules/basic_threats.yar");
+const EMBEDDED_EICAR: &str = include_str!("../../../rules/eicar.yar");
+const EMBEDDED_MALWARE: &str = include_str!("../../../rules/malware_signatures.yar");
 
-    let mut loaded = 0;
-    for entry in entries.flatten() {
-        let path = entry.path();
-        if path.extension().and_then(|e| e.to_str()) == Some("yar") {
-            let source = fs::read_to_string(&path)
-                .map_err(|e| format!("Failed to read {}: {e}", path.display()))?;
-            compiler
-                .add_source(source.as_str())
-                .map_err(|e| format!("Invalid YARA rule in {}: {e}", path.display()))?;
-            loaded += 1;
+/// Resolves the rules directory by checking candidates or returns None if no valid directory with .yar files is found.
+fn resolve_rules_dir(hint: &Path) -> Option<PathBuf> {
+    let mut candidates = Vec::new();
+
+    if hint.as_os_str().len() > 0 {
+        candidates.push(hint.to_path_buf());
+    }
+
+    if let Ok(cwd) = std::env::current_dir() {
+        candidates.push(cwd.join("rules"));
+        candidates.push(cwd.join("../../rules"));
+        candidates.push(cwd.join("../rules"));
+        candidates.push(cwd.join("sentinel-av/rules"));
+    }
+
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(parent) = exe.parent() {
+            candidates.push(parent.join("rules"));
+            candidates.push(parent.join("../../rules"));
+            candidates.push(parent.join("../../../rules"));
         }
     }
 
+    for candidate in candidates {
+        if candidate.is_dir() {
+            if let Ok(entries) = fs::read_dir(&candidate) {
+                let has_yar = entries.flatten().any(|e| {
+                    e.path().extension().and_then(|ext| ext.to_str()) == Some("yar")
+                });
+                if has_yar {
+                    return Some(candidate);
+                }
+            }
+        }
+    }
+
+    None
+}
+
+/// Loads and compiles all .yar rule files from the rules/ directory or falls back to embedded signatures.
+pub fn load_rules(rules_dir: &Path) -> Result<Rules, String> {
+    let mut compiler = Compiler::new();
+    let mut loaded = 0;
+
+    if let Some(resolved_dir) = resolve_rules_dir(rules_dir) {
+        if let Ok(entries) = fs::read_dir(&resolved_dir) {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.extension().and_then(|ext| ext.to_str()) == Some("yar") {
+                    if let Ok(source) = fs::read_to_string(&path) {
+                        match compiler.add_source(source.as_str()) {
+                            Ok(_) => {
+                                println!("Loaded rule file: {}", path.display());
+                                loaded += 1;
+                            }
+                            Err(e) => {
+                                eprintln!("Error in {}: {e}", path.display());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // If no rules could be loaded from disk, use embedded rules
     if loaded == 0 {
-        return Err(format!("No .yar files found in {}", rules_dir.display()));
+        compiler.add_source(EMBEDDED_BASIC).map_err(|e| e.to_string())?;
+        compiler.add_source(EMBEDDED_EICAR).map_err(|e| e.to_string())?;
+        compiler.add_source(EMBEDDED_MALWARE).map_err(|e| e.to_string())?;
     }
 
     Ok(compiler.build())

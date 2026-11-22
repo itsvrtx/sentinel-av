@@ -12,13 +12,18 @@ pub struct QuarantineEntry {
     pub original_path: String,
     pub sha256: String,
     pub rule: String,
+    #[serde(default)]
+    pub file_size: u64,
+    #[serde(default)]
+    pub timestamp: u64,
 }
 
 /// Copies a file in 64 KB chunks while applying an XOR mask to neutralize it.
-fn stream_xor_copy(src: &Path, dst: &Path) -> io::Result<()> {
+fn stream_xor_copy(src: &Path, dst: &Path) -> io::Result<u64> {
     let mut input = File::open(src)?;
     let mut output = File::create(dst)?;
     let mut buffer = [0u8; 64 * 1024];
+    let mut total_bytes = 0u64;
 
     loop {
         let n = input.read(&mut buffer)?;
@@ -29,8 +34,10 @@ fn stream_xor_copy(src: &Path, dst: &Path) -> io::Result<()> {
             *byte ^= XOR_KEY;
         }
         output.write_all(&buffer[..n])?;
+        total_bytes += n as u64;
     }
-    output.flush()
+    output.flush()?;
+    Ok(total_bytes)
 }
 
 /// Moves a flagged file into the quarantine vault and writes its metadata.
@@ -42,24 +49,42 @@ pub fn quarantine_file(
 ) -> io::Result<QuarantineEntry> {
     fs::create_dir_all(vault_dir)?;
 
-    let nanos = SystemTime::now()
+    let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_nanos();
+        .unwrap_or_default();
+    let nanos = now.as_nanos();
+    let secs = now.as_secs();
     let hash_prefix = &sha256[..sha256.len().min(8)];
     let id = format!("{nanos}_{hash_prefix}");
 
     let quar_path = vault_dir.join(format!("{id}.quar"));
     let meta_path = vault_dir.join(format!("{id}.json"));
 
-    stream_xor_copy(file_path, &quar_path)?;
-    fs::remove_file(file_path)?;
+    let file_size = stream_xor_copy(file_path, &quar_path)?;
+
+    // Try removing original; if readonly, try clearing readonly bit first
+    if let Err(e) = fs::remove_file(file_path) {
+        if let Ok(metadata) = fs::metadata(file_path) {
+            let mut permissions = metadata.permissions();
+            if permissions.readonly() {
+                permissions.set_readonly(false);
+                let _ = fs::set_permissions(file_path, permissions);
+                fs::remove_file(file_path)?;
+            } else {
+                return Err(e);
+            }
+        } else {
+            return Err(e);
+        }
+    }
 
     let entry = QuarantineEntry {
         id,
         original_path: file_path.display().to_string(),
         sha256: sha256.to_string(),
         rule: rule.to_string(),
+        file_size,
+        timestamp: secs,
     };
 
     let json = serde_json::to_string_pretty(&entry)
@@ -86,6 +111,8 @@ pub fn list_quarantined(vault_dir: &Path) -> io::Result<Vec<QuarantineEntry>> {
             }
         }
     }
+    // Newest first
+    entries.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
     Ok(entries)
 }
 
@@ -105,8 +132,8 @@ pub fn restore_file(id: &str, vault_dir: &Path) -> io::Result<PathBuf> {
 
     // Applying the same XOR key restores the original bytes
     stream_xor_copy(&quar_path, &original)?;
-    fs::remove_file(quar_path)?;
-    fs::remove_file(meta_path)?;
+    let _ = fs::remove_file(quar_path);
+    let _ = fs::remove_file(meta_path);
 
     Ok(original)
 }
@@ -123,4 +150,39 @@ pub fn delete_permanently(id: &str, vault_dir: &Path) -> io::Result<()> {
         fs::remove_file(meta_path)?;
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_quarantine_lifecycle() {
+        let temp_dir = std::env::temp_dir().join(format!("sentinel_test_{}", std::process::id()));
+        let _ = fs::create_dir_all(&temp_dir);
+
+        let sample_file = temp_dir.join("sample.txt");
+        let vault_dir = temp_dir.join("vault");
+        let content = b"This is a malware test payload 12345";
+        fs::write(&sample_file, content).unwrap();
+
+        // 1. Quarantine file
+        let entry = quarantine_file(&sample_file, "fake_sha256", "Test_Rule", &vault_dir).unwrap();
+        assert_eq!(entry.file_size, content.len() as u64);
+        assert!(!sample_file.exists());
+
+        // 2. List vault
+        let items = list_quarantined(&vault_dir).unwrap();
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].id, entry.id);
+
+        // 3. Restore file
+        let restored = restore_file(&entry.id, &vault_dir).unwrap();
+        assert!(restored.exists());
+        let restored_bytes = fs::read(&restored).unwrap();
+        assert_eq!(restored_bytes, content);
+
+        // 4. Clean up
+        let _ = fs::remove_dir_all(&temp_dir);
+    }
 }
