@@ -2,9 +2,9 @@
 
 **A free, open-source, low-RAM antivirus built in Rust & Tauri 2 — engineered under human supervision to explore the depth of AI-assisted systems programming.**
 
-[License: MIT](https://www.google.com/search?q=LICENSE)
-[](https://www.rust-lang.org/)
-[](https://v2.tauri.app/)
+[![LICENSE](https://shields.io)](Github)
+[![Rust](https://shields.io)](https://rust-lang.org)
+![YARA](https://shields.io)
 
 <p align="center">
 <img src="screenshots/image.png" alt="Sentinel AV Threat Scanner" width="820" />
