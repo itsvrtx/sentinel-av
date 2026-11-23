@@ -86,6 +86,31 @@ pub fn read_recent_logs(log_path: &Path, max_entries: usize) -> io::Result<Vec<S
     Ok(entries)
 }
 
+/// Removes log entries that had zero threats detected, keeping only threat detections.
+pub fn clear_clean_logs(log_path: &Path) -> io::Result<usize> {
+    if !log_path.exists() {
+        return Ok(0);
+    }
+    let all = read_recent_logs(log_path, usize::MAX)?;
+    let threats_only: Vec<ScanLogEntry> = all.into_iter().filter(|e| e.threats_found > 0).collect();
+    let removed = read_recent_logs(log_path, usize::MAX)?.len().saturating_sub(threats_only.len());
+
+    let mut file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(log_path)?;
+
+    for entry in threats_only.iter().rev() {
+        let mut line = serde_json::to_string(entry)
+            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        line.push('\n');
+        file.write_all(line.as_bytes())?;
+    }
+    file.flush()?;
+    Ok(removed)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

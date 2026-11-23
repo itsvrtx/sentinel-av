@@ -1,3 +1,4 @@
+pub mod network_monitor;
 pub mod usb;
 
 use std::collections::HashMap;

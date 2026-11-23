@@ -1040,10 +1040,73 @@
     .toast-error { background: var(--danger); color: #fff; }
     .toast-info { background: var(--accent); color: #fff; }
 
+    /* Sortable table headers */
+    th.sortable {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      padding-right: 24px;
+    }
+    th.sortable::after {
+      content: "";
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 6px solid var(--text-muted);
+      opacity: 0.4;
+      transition: opacity var(--transition), transform var(--transition);
+    }
+    th.sortable:hover::after { opacity: 1; }
+    th.sortable.asc::after {
+      border-bottom-color: var(--accent);
+      transform: translateY(-50%) rotate(180deg);
+      opacity: 1;
+    }
+    th.sortable.desc::after {
+      border-bottom-color: var(--accent);
+      transform: translateY(-50%) rotate(0deg);
+      opacity: 1;
+    }
+
+    /* Watermark footer */
+    .watermark-footer {
+      margin-top: auto;
+      padding: 16px 28px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .watermark-footer a {
+      color: var(--accent);
+      text-decoration: none;
+      transition: color var(--transition);
+    }
+    .watermark-footer a:hover {
+      color: var(--accent-hover);
+      text-decoration: underline;
+    }
+    .watermark-divider {
+      display: inline-block;
+      margin: 0 8px;
+      opacity: 0.4;
+    }
+
     @media (max-width: 768px) {
       header, nav, main { padding-left: 16px; padding-right: 16px; }
       .shortcuts-grid { grid-template-columns: 1fr 1fr; }
       .scan-input-group { flex-direction: column; }
+      .watermark-footer { padding: 12px 16px; font-size: 10px; }
     }
   </style>
 </head>
@@ -1065,8 +1128,18 @@
         <span class="pulse-dot"></span>
         <span id="systemShieldText">Shield Active</span>
       </div>
+      <button class="icon-btn" id="notifToggleBtn" onclick="toggleNotifications()" title="Desktop Notifications: Enabled" aria-label="Toggle Desktop Notifications">
+        <span id="notifIconSlot">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </span>
+      </button>
       <button class="icon-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
         <span id="themeIconSlot"></span>
+      </button>
+      <button class="icon-btn" id="fullscreenToggleBtn" onclick="toggleFullscreenMode()" title="Toggle Fullscreen (F11)" aria-label="Toggle Fullscreen">
+        <span id="fullscreenIconSlot">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+        </span>
       </button>
     </div>
   </header>
@@ -1089,6 +1162,10 @@
     <div class="nav-tab" id="tabNavSignatures" onclick="switchTab('signatures')" role="tab">
       <svg class="icon" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>
       Signatures
+    </div>
+    <div class="nav-tab" id="tabNavLogs" onclick="switchTab('logs')" role="tab">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Scan Logs
     </div>
   </nav>
 
@@ -1146,13 +1223,13 @@
               type="text"
               id="targetInput"
               class="path-input"
-              placeholder="Select shortcut above or click Browse…"
+              placeholder="Select shortcut above or click Browse to choose a folder"
               aria-label="Target directory to scan"
             />
           </div>
           <button class="btn btn-secondary" onclick="browseFolder()">
             <svg class="icon" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
-            Browse…
+            Browse
           </button>
           <button class="btn btn-primary" id="startScanBtn" onclick="startScan()">
             <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
@@ -1160,11 +1237,15 @@
           </button>
         </div>
 
-        <!-- Stats Section: Files Analyzed, Scan Duration, Threats Neutralized -->
+        <!-- Stats Section: Files Analyzed, Files Skipped, Scan Duration, Threats Neutralized -->
         <div class="stats-row" id="scanStatsRow">
           <div class="stat-card">
             <span class="stat-label">Files Analyzed</span>
             <span class="stat-value" id="statFilesScanned">0</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Files Skipped</span>
+            <span class="stat-value" id="statFilesSkipped">0</span>
           </div>
           <div class="stat-card">
             <span class="stat-label">Scan Duration</span>
@@ -1225,10 +1306,16 @@
             </h2>
             <p class="panel-subtitle">Isolated threats neutralized via XOR byte masking. Safe to review, restore, or delete.</p>
           </div>
-          <button class="btn btn-secondary btn-sm" onclick="loadVault()">
-            <svg class="icon-sm" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-1.19"/></svg>
-            Refresh Vault
-          </button>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-sm" id="restoreAllVaultBtn" onclick="restoreAllThreats()">
+              <svg class="icon-sm" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+              Restore All
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="loadVault()">
+              <svg class="icon-sm" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-1.19"/></svg>
+              Refresh Vault
+            </button>
+          </div>
         </div>
 
         <div class="vault-toolbar">
@@ -1288,6 +1375,15 @@
               <svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label for="processSortSelect" style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">Sort:</label>
+            <select id="processSortSelect" class="search-input" style="padding: 6px 12px; font-size: 12px; width: auto; cursor: pointer;" onchange="onProcessSortSelectChange(this.value)">
+              <option value="cpu-desc">CPU: High → Low</option>
+              <option value="cpu-asc">CPU: Low → High</option>
+              <option value="ram-desc">Memory: High → Low</option>
+              <option value="ram-asc">Memory: Low → High</option>
+            </select>
+          </div>
           <span style="font-size: 12px; color: var(--text-muted);" id="processStatusText">
             Monitoring active tasks...
           </span>
@@ -1299,8 +1395,8 @@
               <tr>
                 <th>PID</th>
                 <th>Process Name</th>
-                <th>CPU %</th>
-                <th>Memory</th>
+                <th class="sortable" data-sort="cpu" onclick="sortProcesses('cpu')">CPU %</th>
+                <th class="sortable" data-sort="memory" onclick="sortProcesses('memory')">Memory</th>
                 <th>Status</th>
                 <th>Action</th>
               </tr>
@@ -1348,7 +1444,45 @@
         <div class="signature-grid" id="signatureGrid"></div>
       </section>
     </div>
+
+    <!-- TAB 5: SCAN LOGS -->
+    <div id="tabLogs" class="tab-content">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              Scan History & Audit Logs
+            </h2>
+            <p class="panel-subtitle">Historical audit trail of completed directory scans and neutralization events.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary btn-sm" onclick="clearCleanScanLogs()">
+              <svg class="icon-sm" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
+              Clear Clean Logs
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="loadScanLogs()">
+              <svg class="icon-sm" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-1.19"/></svg>
+              Refresh Logs
+            </button>
+          </div>
+        </div>
+        <div id="logsListContainer"></div>
+      </section>
+    </div>
   </main>
+
+  <!-- Watermark Footer -->
+  <footer class="watermark-footer" role="contentinfo">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+      <span style="font-weight: 600; color: var(--text);">build by itsvrtx</span>
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 11px;">
+        <a href="https://github.com/itsvrtx" target="_blank" rel="noopener noreferrer" onclick="openExternalUrl(event, 'https://github.com/itsvrtx')">GitHub Profile</a>
+        <span aria-hidden="true">•</span>
+        <a href="https://github.com/itsvrtx/sentinel-av" target="_blank" rel="noopener noreferrer" onclick="openExternalUrl(event, 'https://github.com/itsvrtx/sentinel-av')">GitHub Repository</a>
+      </div>
+    </div>
+  </footer>
 
   <!-- Toast Notification Banner -->
   <div class="toast-banner" id="toastBanner"></div>
@@ -1367,6 +1501,9 @@
     let scanDurationTimer = null;
     let scannedFilesRecord = [];
     let scanHistoryOpen = false;
+    // Process sorting state
+    let processSortColumn = 'cpu';
+    let processSortDirection = 'desc';
 
     function toggleScanHistory() {
       scanHistoryOpen = !scanHistoryOpen;
@@ -1428,9 +1565,59 @@
       applyTheme(current === "dark" ? "light" : "dark");
     }
 
+    // Fullscreen Mode Management
+    let isAppFullscreen = false;
+
+    async function toggleFullscreenMode() {
+      const invoke = getInvoke();
+      if (invoke) {
+        try {
+          isAppFullscreen = await invoke("toggle_fullscreen");
+          updateFullscreenIcon(isAppFullscreen);
+          return;
+        } catch (e) {
+          console.warn("Tauri fullscreen error:", e);
+        }
+      }
+
+      // Fallback for HTML5 fullscreen API
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().then(() => {
+          isAppFullscreen = true;
+          updateFullscreenIcon(true);
+        }).catch((e) => console.warn(e));
+      } else {
+        document.exitFullscreen().then(() => {
+          isAppFullscreen = false;
+          updateFullscreenIcon(false);
+        }).catch((e) => console.warn(e));
+      }
+    }
+
+    function updateFullscreenIcon(isFullscreen) {
+      const slot = document.getElementById("fullscreenIconSlot");
+      const btn = document.getElementById("fullscreenToggleBtn");
+      if (!slot) return;
+      if (isFullscreen) {
+        slot.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>`;
+        if (btn) btn.title = "Exit Fullscreen (F11)";
+      } else {
+        slot.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>`;
+        if (btn) btn.title = "Toggle Fullscreen (F11)";
+      }
+    }
+
+    // Keyboard shortcut for F11
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "F11") {
+        e.preventDefault();
+        toggleFullscreenMode();
+      }
+    });
+
     // Tab Navigation
     function switchTab(tabId) {
-      const tabs = ["scanner", "vault", "processes", "signatures"];
+      const tabs = ["scanner", "vault", "processes", "signatures", "logs"];
       tabs.forEach(t => {
         const navEl = document.getElementById(`tabNav${capitalize(t)}`);
         const contentEl = document.getElementById(`tab${capitalize(t)}`);
@@ -1453,6 +1640,7 @@
 
       if (tabId === "vault") loadVault();
       if (tabId === "signatures") loadSignatures();
+      if (tabId === "logs") loadScanLogs();
     }
 
     function capitalize(s) {
@@ -1564,6 +1752,7 @@
       const shieldBadge = document.getElementById("systemShieldBadge");
       const shieldText = document.getElementById("systemShieldText");
       const statFiles = document.getElementById("statFilesScanned");
+      const statSkipped = document.getElementById("statFilesSkipped");
       const statDuration = document.getElementById("statDuration");
       const statThreats = document.getElementById("statThreatsCount");
 
@@ -1575,6 +1764,7 @@
       renderScannedFilesList();
 
       statFiles.textContent = "0";
+      if (statSkipped) statSkipped.textContent = "0";
       statThreats.textContent = "0";
       statThreats.className = "stat-value clean";
 
@@ -1621,7 +1811,7 @@
       }
 
       try {
-        const summary = await invoke("scan_folder", { target });
+        const summary = await invoke("scan_folder", { target, notify: notificationsEnabled });
         clearInterval(scanDurationTimer);
 
         const threats = summary.quarantined || [];
@@ -1639,6 +1829,7 @@
         renderScannedFilesList();
 
         statFiles.textContent = summary.files_scanned.toLocaleString();
+        if (statSkipped) statSkipped.textContent = (summary.files_skipped || 0).toLocaleString();
         statDuration.textContent = `${summary.duration_ms} ms`;
         statThreats.textContent = threats.length;
         activeScanCounter.textContent = `Completed (${summary.files_scanned} files)`;
@@ -1720,6 +1911,20 @@
       }
     }
 
+    const RULE_DESCRIPTIONS = {
+      "EICAR_Test_File": "Industry-standard antivirus verification signature",
+      "Test_Suspicious_Pattern": "Internal Sentinel AV test verification signature",
+      "Trojan_Generic_Dropper": "Detects memory injection, staging downloaders, and concealed execution",
+      "Trojan_RAT_Indicator": "Detects Remote Access Trojans (AsyncRAT, NjRAT, Remcos, Quasar)",
+      "Trojan_InfoStealer_Vault": "Detects browser credential, cookie, and cryptocurrency wallet harvesting",
+      "Suspicious_Webshell": "Detects common PHP webshells (c99, r57, b374k, eval base64)",
+      "Suspicious_PowerShell_Downloader": "Detects encoded PowerShell cradles, certutil, bitsadmin downloads",
+      "Ransomware_Extortion_Note": "Detects ransomware encryption notes and payment demands",
+      "Suspicious_Reverse_Shell": "Detects interactive netcat, bash, and python reverse shell pipes",
+      "Suspicious_High_Entropy_Packed": "Executable exhibits packed/concealed code with high Shannon entropy",
+      "Vulnerable_BYOVD_LOLDriver": "Known vulnerable driver used in Bring-Your-Own-Vulnerable-Driver attacks",
+    };
+
     function renderVault(items) {
       const container = document.getElementById("vaultListContainer");
       if (items.length === 0) {
@@ -1738,6 +1943,7 @@
       container.innerHTML = items.map(item => {
         const sizeFormatted = item.file_size ? formatBytes(item.file_size) : "Masked";
         const timeFormatted = item.timestamp ? new Date(item.timestamp * 1000).toLocaleString() : "Recently";
+        const ruleDesc = RULE_DESCRIPTIONS[item.rule] || "Heuristic pattern match";
         return `
           <div class="vault-item">
             <div class="vault-item-header">
@@ -1756,10 +1962,13 @@
                 </button>
               </div>
             </div>
+            <div style="font-size: 12px; color: var(--accent, #f59e0b); margin: 3px 0 6px 0;">
+              <strong>Threat Detail:</strong> ${escapeHtml(ruleDesc)}
+            </div>
             <div style="font-size: 13px; font-family: var(--font-mono); word-break: break-all;">
               <strong>Original Path:</strong> ${escapeHtml(item.original_path)}
             </div>
-            <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); display: flex; gap: 16px; flex-wrap: wrap;">
+            <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); display: flex; gap: 16px; flex-wrap: wrap; margin-top: 4px;">
               <span><strong>SHA-256:</strong> ${escapeHtml(item.sha256)}</span>
               <span><strong>Size:</strong> ${sizeFormatted}</span>
               <span><strong>Quarantined:</strong> ${timeFormatted}</span>
@@ -1791,6 +2000,25 @@
       }
     }
 
+    async function restoreAllThreats() {
+      if (!allVaultItems || allVaultItems.length === 0) {
+        showToast("No threats in vault to restore.", "info");
+        return;
+      }
+      if (!confirm(`Restore all ${allVaultItems.length} quarantined threat file(s) back to their original locations?`)) {
+        return;
+      }
+      const invoke = getInvoke();
+      if (!invoke) return;
+      try {
+        const count = await invoke("restore_all_items");
+        showToast(`Successfully restored ${count} file(s).`, "success");
+        await loadVault();
+      } catch (e) {
+        showToast(`Restore all failed: ${e}`, "error");
+      }
+    }
+
     async function deleteThreat(id) {
       if (!confirm("Permanently delete this quarantined threat file? This action cannot be undone.")) {
         return;
@@ -1803,6 +2031,67 @@
         await loadVault();
       } catch (e) {
         showToast(`Deletion failed: ${e}`, "error");
+      }
+    }
+
+    // Load Scan Logs
+    async function loadScanLogs() {
+      const invoke = getInvoke();
+      const container = document.getElementById("logsListContainer");
+      if (!invoke || !container) return;
+
+      try {
+        const logs = await invoke("get_scan_logs");
+        if (!logs || logs.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <h3>No Scan Logs Recorded</h3>
+              <p>Scan activity will appear here automatically when scans are performed.</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = logs.map(entry => {
+          const timeFormatted = entry.timestamp ? new Date(entry.timestamp * 1000).toLocaleString() : "Recently";
+          const isClean = entry.threats_found === 0;
+          const statusBadge = isClean
+            ? `<span style="display:inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; background: rgba(16, 185, 129, 0.15); color: #10b981; font-weight: 600;">Clean</span>`
+            : `<span style="display:inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; background: rgba(239, 68, 68, 0.15); color: #ef4444; font-weight: 600;">${entry.threats_found} Threat(s)</span>`;
+          
+          return `
+            <div class="vault-item" style="margin-bottom: 10px;">
+              <div class="vault-item-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  ${statusBadge}
+                  <span style="font-size: 13px; font-family: var(--font-mono); font-weight: 600;">${escapeHtml(entry.target)}</span>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">
+                  ${timeFormatted}
+                </div>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); display: flex; gap: 16px; margin-top: 4px; font-family: var(--font-mono);">
+                <span><strong>Scanned:</strong> ${entry.files_scanned} files</span>
+                <span><strong>Duration:</strong> ${entry.duration_ms} ms</span>
+              </div>
+            </div>
+          `;
+        }).join("");
+      } catch (e) {
+        console.error("Failed to load scan logs:", e);
+        container.innerHTML = `<div class="empty-state"><p>Error loading logs: ${escapeHtml(String(e))}</p></div>`;
+      }
+    }
+
+    async function clearCleanScanLogs() {
+      const invoke = getInvoke();
+      if (!invoke) return;
+      try {
+        const removed = await invoke("clear_clean_logs");
+        showToast(`Cleared ${removed} clean log entries. Threat history preserved.`, "success");
+        await loadScanLogs();
+      } catch (e) {
+        showToast(`Failed to clear clean logs: ${e}`, "error");
       }
     }
 
@@ -2017,6 +2306,56 @@
       );
     }
 
+    function sortProcesses(column) {
+      if (processSortColumn === column) {
+        processSortDirection = processSortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        processSortColumn = column;
+        processSortDirection = 'desc';
+      }
+
+      const headers = document.querySelectorAll('#tabProcesses thead th.sortable');
+      headers.forEach(h => {
+        h.classList.remove('asc', 'desc');
+        if (h.dataset.sort === column) {
+          h.classList.add(processSortDirection === 'asc' ? 'asc' : 'desc');
+        }
+      });
+
+      const select = document.getElementById("processSortSelect");
+      if (select) {
+        select.value = column === "cpu"
+          ? (processSortDirection === "asc" ? "cpu-asc" : "cpu-desc")
+          : (processSortDirection === "asc" ? "ram-asc" : "ram-desc");
+      }
+
+      filterProcesses();
+    }
+
+    function onProcessSortSelectChange(val) {
+      if (val === "cpu-desc") {
+        processSortColumn = "cpu";
+        processSortDirection = "desc";
+      } else if (val === "cpu-asc") {
+        processSortColumn = "cpu";
+        processSortDirection = "asc";
+      } else if (val === "ram-desc") {
+        processSortColumn = "memory";
+        processSortDirection = "desc";
+      } else if (val === "ram-asc") {
+        processSortColumn = "memory";
+        processSortDirection = "asc";
+      }
+      const headers = document.querySelectorAll('#tabProcesses thead th.sortable');
+      headers.forEach(h => {
+        h.classList.remove('asc', 'desc');
+        if (h.dataset.sort === processSortColumn) {
+          h.classList.add(processSortDirection === 'asc' ? 'asc' : 'desc');
+        }
+      });
+      filterProcesses();
+    }
+
     function filterProcesses() {
       const input = document.getElementById("processSearchInput");
       const clearBtn = document.getElementById("clearProcessSearchBtn");
@@ -2027,13 +2366,30 @@
         clearBtn.style.display = q ? "block" : "none";
       }
 
-      const filtered = getFilteredProcesses();
+      let filtered = getFilteredProcesses();
+
+      // Apply sorting
+      filtered.sort((a, b) => {
+        let valA, valB;
+        if (processSortColumn === 'cpu') {
+          valA = a.cpu_usage;
+          valB = b.cpu_usage;
+        } else if (processSortColumn === 'memory') {
+          valA = a.memory_mb;
+          valB = b.memory_mb;
+        } else {
+          return 0;
+        }
+        return processSortDirection === 'asc' ? valA - valB : valB - valA;
+      });
 
       if (statusText) {
         if (q) {
           statusText.textContent = `Showing ${filtered.length} of ${allProcesses.length} process(es) matching "${q}"`;
         } else {
-          statusText.textContent = `Monitoring ${allProcesses.length} active process(es)`;
+          const sortLabel = processSortColumn === 'cpu' ? 'CPU' : 'Memory';
+          const dirLabel = processSortDirection === 'asc' ? '▲ Low' : '▼ High';
+          statusText.textContent = `Monitoring ${allProcesses.length} active process(es) — Sorted by ${sortLabel}: ${dirLabel}`;
         }
       }
 
@@ -2103,6 +2459,44 @@
       `).join("");
     }
 
+    // External URL Opener
+    function openExternalUrl(event, url) {
+      if (event) event.preventDefault();
+      const invoke = getInvoke();
+      if (invoke) {
+        invoke("open_url", { url }).catch(() => window.open(url, "_blank"));
+      } else {
+        window.open(url, "_blank");
+      }
+    }
+
+    // Desktop Notification Controls
+    let notificationsEnabled = localStorage.getItem("sentinel_notifications") !== "false";
+
+    function initNotifications() {
+      updateNotifIcon();
+    }
+
+    function toggleNotifications() {
+      notificationsEnabled = !notificationsEnabled;
+      localStorage.setItem("sentinel_notifications", notificationsEnabled ? "true" : "false");
+      updateNotifIcon();
+      showToast(notificationsEnabled ? "Desktop Notifications: Enabled" : "Desktop Notifications: Clean scan alerts muted", "info");
+    }
+
+    function updateNotifIcon() {
+      const slot = document.getElementById("notifIconSlot");
+      const btn = document.getElementById("notifToggleBtn");
+      if (!slot) return;
+      if (notificationsEnabled) {
+        slot.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
+        if (btn) btn.title = "Desktop Notifications: Enabled";
+      } else {
+        slot.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="m2 2 20 20"/></svg>`;
+        if (btn) btn.title = "Desktop Notifications: Muted (Clean Scans)";
+      }
+    }
+
     // Utility Helpers
     function formatBytes(bytes) {
       if (bytes < 1024) return bytes + " B";
@@ -2122,8 +2516,22 @@
     // Initialization
     window.addEventListener("DOMContentLoaded", () => {
       initTheme();
+      initNotifications();
       loadCommonFolders();
       loadVault();
+
+      const listen = getListen();
+      if (listen) {
+        listen("trigger-quick-scan", () => {
+          switchTab("scanner");
+          selectPath("downloads");
+          setTimeout(() => startScan(), 300);
+        });
+        listen("navigate-to-vault", () => {
+          switchTab("vault");
+          loadVault();
+        });
+      }
     });
   </script>
 </body>

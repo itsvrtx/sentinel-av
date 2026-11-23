@@ -3,7 +3,10 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::time::Duration;
 use sysinfo::{Pid, System};
-use tauri::Emitter;
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+use tauri::{Emitter, Manager, WindowEvent};
+use tauri_plugin_notification::NotificationExt;
 
 #[derive(serde::Serialize)]
 struct FolderOption {
@@ -20,6 +23,7 @@ struct ScanProgress {
 #[derive(serde::Serialize)]
 struct ScanSummary {
     files_scanned: usize,
+    files_skipped: usize,
     duration_ms: u128,
     quarantined: Vec<QuarantineEntry>,
 }
@@ -98,6 +102,22 @@ fn get_common_folders() -> Vec<FolderOption> {
     folders
 }
 
+fn resolve_bundle_rules_dir(app: &tauri::AppHandle) -> PathBuf {
+    if let Ok(res_dir) = app.path().resource_dir() {
+        let p = res_dir.join("rules");
+        if p.exists() {
+            return p;
+        }
+    }
+    for candidate in ["rules", "../../rules", "../rules"] {
+        let p = PathBuf::from(candidate);
+        if p.exists() {
+            return p;
+        }
+    }
+    PathBuf::from("rules")
+}
+
 #[tauri::command]
 async fn pick_custom_folder() -> Option<String> {
     rfd::AsyncFileDialog::new()
@@ -108,14 +128,19 @@ async fn pick_custom_folder() -> Option<String> {
 }
 
 #[tauri::command]
-async fn scan_folder(app: tauri::AppHandle, target: String) -> Result<ScanSummary, String> {
+async fn scan_folder(
+    app: tauri::AppHandle,
+    target: String,
+    notify: Option<bool>,
+) -> Result<ScanSummary, String> {
+    let rules_dir = resolve_bundle_rules_dir(&app);
+    let notify_clean = notify.unwrap_or(true);
     tauri::async_runtime::spawn_blocking(move || {
-        let rules_dir = Path::new("rules");
         let vault = get_vault_path();
 
         let report = core_scanner::scan_directory_with_progress(
             Path::new(&target),
-            rules_dir,
+            &rules_dir,
             |count, path| {
                 let _ = app.emit(
                     "scan-progress",
@@ -144,13 +169,48 @@ async fn scan_folder(app: tauri::AppHandle, target: String) -> Result<ScanSummar
                             .duration_since(std::time::UNIX_EPOCH)
                             .unwrap_or_default()
                             .as_secs(),
+                        key: 0xAA,
+                        key_hex: String::new(),
                     });
                 }
             }
         }
 
+        // Trigger Native Windows Notifications for Scan Events
+        if !quarantined.is_empty() {
+            let first_rule = quarantined.first().map(|q| q.rule.as_str()).unwrap_or("Malware");
+            let body = format!(
+                "{} threat(s) isolated in Quarantine Vault ({}). Open Sentinel AV immediately to review and delete or restore.",
+                quarantined.len(),
+                first_rule
+            );
+            if let Err(e) = app.notification()
+                .builder()
+                .title("Sentinel AV — Threat Detected!")
+                .body(&body)
+                .show()
+            {
+                eprintln!("Failed to fire threat notification: {e}");
+            }
+        } else if notify_clean {
+            let body = format!(
+                "Scanned {} file(s) in {} ms. No threats found.",
+                report.files_scanned,
+                report.duration_ms
+            );
+            if let Err(e) = app.notification()
+                .builder()
+                .title("Sentinel AV — Scan Complete")
+                .body(&body)
+                .show()
+            {
+                eprintln!("Failed to fire clean scan notification: {e}");
+            }
+        }
+
         Ok(ScanSummary {
             files_scanned: report.files_scanned,
+            files_skipped: report.files_skipped,
             duration_ms: report.duration_ms,
             quarantined,
         })
@@ -170,6 +230,18 @@ fn restore_item(id: String) -> Result<String, String> {
     let vault = get_vault_path();
     let restored = quarantine::restore_file(&id, &vault).map_err(|e| e.to_string())?;
     Ok(restored.display().to_string())
+}
+
+#[tauri::command]
+fn restore_all_items() -> Result<usize, String> {
+    let vault = get_vault_path();
+    quarantine::restore_all(&vault).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn clear_clean_logs() -> Result<usize, String> {
+    let log_path = core_scanner::scan_log::get_default_log_path();
+    core_scanner::scan_log::clear_clean_logs(&log_path).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -341,21 +413,193 @@ fn get_active_signatures() -> Vec<RuleSummary> {
     ]
 }
 
+#[cfg(target_os = "windows")]
+fn register_app_user_model_id(app_id: &str, display_name: &str) {
+    use std::ffi::OsStr;
+    use std::os::windows::ffi::OsStrExt;
+    use std::os::windows::process::CommandExt;
+
+    #[link(name = "shell32")]
+    unsafe extern "system" {
+        fn SetCurrentProcessExplicitAppUserModelID(AppID: *const u16) -> i32;
+    }
+    let wide_id: Vec<u16> = OsStr::new(app_id)
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+    unsafe {
+        let _ = SetCurrentProcessExplicitAppUserModelID(wide_id.as_ptr());
+    }
+
+    let reg_key = format!(r"HKCU\Software\Classes\AppUserModelId\{app_id}");
+    let _ = std::process::Command::new("reg")
+        .args([
+            "add",
+            &reg_key,
+            "/v",
+            "DisplayName",
+            "/t",
+            "REG_SZ",
+            "/d",
+            display_name,
+            "/f",
+        ])
+        .creation_flags(0x08000000)
+        .output();
+
+    if let Ok(exe_path) = std::env::current_exe() {
+        let _ = std::process::Command::new("reg")
+            .args([
+                "add",
+                &reg_key,
+                "/v",
+                "IconUri",
+                "/t",
+                "REG_SZ",
+                "/d",
+                &exe_path.display().to_string(),
+                "/f",
+            ])
+            .creation_flags(0x08000000)
+            .output();
+    }
+}
+
+#[tauri::command]
+fn toggle_fullscreen(window: tauri::Window) -> Result<bool, String> {
+    let is_fullscreen = window.is_fullscreen().map_err(|e| e.to_string())?;
+    let new_state = !is_fullscreen;
+    window.set_fullscreen(new_state).map_err(|e| e.to_string())?;
+    // Ensure always_on_top is never enabled so Alt+Tab and taskbar window switching remain functional
+    let _ = window.set_always_on_top(false);
+    Ok(new_state)
+}
+
+#[tauri::command]
+fn open_url(url: String) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        let _ = std::process::Command::new("rundll32")
+            .args(["url.dll,FileProtocolHandler", &url])
+            .creation_flags(0x08000000)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = std::process::Command::new("xdg-open")
+            .arg(&url)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn focus_and_open_vault(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.unminimize();
+        let _ = window.set_focus();
+        let _ = window.emit("navigate-to-vault", ());
+    }
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
+        .setup(|app| {
+            #[cfg(target_os = "windows")]
+            register_app_user_model_id("com.itsvrtx.sentinelav", "Sentinel AV");
+
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.set_min_size(Some(tauri::LogicalSize::new(920.0, 640.0)));
+                let _ = window.set_always_on_top(false);
+            }
+
+            // System Tray menu items: Open Dashboard, Quick Scan, Quit
+            let open_item = MenuItem::with_id(app, "open", "Open Dashboard", true, None::<&str>)?;
+            let scan_item = MenuItem::with_id(app, "quick_scan", "Quick Scan", true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&open_item, &scan_item, &quit_item])?;
+
+            let mut tray_builder = TrayIconBuilder::new()
+                .menu(&menu)
+                .show_menu_on_left_click(false)
+                .tooltip("Sentinel AV")
+                .on_menu_event(|app, event| {
+                    match event.id.as_ref() {
+                        "open" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.unminimize();
+                                let _ = window.set_focus();
+                            }
+                        }
+                        "quick_scan" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.unminimize();
+                                let _ = window.set_focus();
+                                let _ = window.emit("trigger-quick-scan", ());
+                            }
+                        }
+                        "quit" => {
+                            app.exit(0);
+                        }
+                        _ => {}
+                    }
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        button_state: MouseButtonState::Up,
+                        ..
+                    } = event
+                    {
+                        let app = tray.app_handle();
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.unminimize();
+                            let _ = window.set_focus();
+                        }
+                    }
+                });
+
+            if let Some(icon) = app.default_window_icon() {
+                tray_builder = tray_builder.icon(icon.clone());
+            }
+
+            let _ = tray_builder.build(app)?;
+
+            Ok(())
+        })
+        .on_window_event(|window, event| {
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                let _ = window.hide();
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             get_common_folders,
             pick_custom_folder,
             scan_folder,
             get_quarantined,
             restore_item,
+            restore_all_items,
             delete_item,
             get_system_processes,
             kill_process,
             open_file_location,
             get_scan_logs,
-            get_active_signatures
+            clear_clean_logs,
+            get_active_signatures,
+            toggle_fullscreen,
+            open_url,
+            focus_and_open_vault
         ])
         .run(tauri::generate_context!())
         .expect("error while running Sentinel AV");

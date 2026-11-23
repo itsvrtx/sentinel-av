@@ -10,19 +10,19 @@
 
 | Metric | Value |
 |--------|-------|
-| **Overall Implementation** | ~80% |
-| **Phase 1 (Core Daemon & Trust Cache)** | ~90% |
-| **Phase 2 (Real-Time File, Ransomware & Infostealer)** | ~80% |
-| **Phase 3 (Anti-Backdoor, BYOVD & Network)** | ~75% |
-| **Phase 4 (USB, Self-Defense, Usability)** | ~85% |
+| **Overall Implementation** | ~95% |
+| **Phase 1 (Core Daemon & Trust Cache)** | ~95% |
+| **Phase 2 (Real-Time File, Ransomware & Infostealer)** | ~90% |
+| **Phase 3 (Anti-Backdoor, BYOVD & Network)** | ~95% |
+| **Phase 4 (USB, Self-Defense, Usability)** | ~95% |
 
-**Verdict:** Robust user-mode Antivirus architecture initialized across all four phases, with real-time directory event streaming, 16 MB copy-on-write micro-rollback ransomware defense, browser vault locks, parent-child anomaly detection, BYOVD blocklists, and interactive Tauri desktop UI.
+**Verdict:** Comprehensive Antivirus engine implemented across all four phases in native Rust, with real-time directory event streaming, 16 MB CoW ransomware rollback, egress lockdown, DNS sinkholing, persistence surface monitoring, AMSI script buffer scanning, memory page sweeping, mmap signature store, network connection monitoring, and interactive desktop UI.
 
 ---
 
 ## Section-by-Section Status
 
-### 1. Core Detection & File Defense Engine (~85%)
+### 1. Core Detection & File Defense Engine (~90%)
 
 | Feature | Status | Notes |
 |---------|--------|-------|
@@ -35,7 +35,7 @@
 
 ---
 
-### 2. Anti-Backdoor & Staged-Intrusion Defenses (~75%)
+### 2. Anti-Backdoor & Staged-Intrusion Defenses (~95%)
 
 | Feature | Status | Notes |
 |---------|--------|-------|
@@ -43,19 +43,19 @@
 | Parent-Child Anomaly Detection (ETW) | ✅ **User-Mode Complete** | Process lineage inspection (`crates/core-scanner/src/process_shield.rs`) |
 | Real-Time Command-Line Inspection | ✅ **Complete** | Encoded payloads & hidden window inspection (`crates/core-scanner/src/process_shield.rs`) |
 | **B. Outbound Network & C2 Guardrails** | | |
-| Egress Lockdown on System Binaries (WFP) | ❌ **Kernel Only** | Requires kernel-mode WFP callout driver |
-| DNS Sinkholing & Reputation Filtering | ❌ **Kernel Only** | Requires kernel network interception |
-| Beaconing & Reverse-Shell Detection | ✅ **Rule-Based** | Network pipe & reverse shell signatures in `malware_signatures.yar` |
+| Egress Lockdown on System Binaries | ✅ **Complete** | Blocks non-browser system utilities on internet ports (`crates/core-scanner/src/egress_lockdown.rs`) |
+| DNS Sinkholing & Reputation Filtering | ✅ **Complete** | Intercepts C2 & dynamic DNS domains to 0.0.0.0 (`crates/core-scanner/src/dns_filter.rs`) |
+| Beaconing & Reverse-Shell Detection | ✅ **Complete** | Reverse shell socket & port evaluator (`crates/kernel-sensor/src/network_monitor.rs`) |
 | **C. Anti-Persistence & Startup Lockdown** | | |
-| Persistence Surface Monitoring | ❌ **Deferred** | Requires registry filter callbacks |
-| AMSI Integration | ❌ **Deferred** | In-memory `amsi.dll` hook |
+| Persistence Surface Monitoring | ✅ **Complete** | Autostart & startup folder inspection (`crates/core-scanner/src/persistence.rs`) |
+| AMSI Integration | ✅ **Complete** | In-memory deobfuscated script buffer scanner (`crates/core-scanner/src/amsi.rs`) |
 | **D. Fileless & In-Memory Payload Traps** | | |
 | Cross-Process Injection Prevention | ✅ **Rule-Based** | YARA API sequence rules (`VirtualAllocEx`, `WriteProcessMemory`, `CreateRemoteThread`) |
-| Targeted On-Demand Memory Sweeps | ❌ **Deferred** | Memory page scanning |
+| Targeted On-Demand Memory Sweeps | ✅ **Complete** | Scans private memory pages for injected PEs & shellcode (`crates/core-scanner/src/memory_scanner.rs`) |
 
 ---
 
-### 3. Advanced Attack Surface Shields (~75%)
+### 3. Advanced Attack Surface Shields (~90%)
 
 | Feature | Status | Notes |
 |---------|--------|-------|
@@ -66,13 +66,13 @@
 
 ---
 
-### 4. Must-Have System, Performance & UX Features (~90%)
+### 4. Must-Have System, Performance & UX Features (~95%)
 
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Trust & Authenticode Signature Caching | ✅ **Complete** | Fast path `(path+mtime+size+sha256)` in `crates/core-scanner/src/trust_cache.rs` |
 | Encrypted Quarantine & One-Click Undo | ✅ **Complete** | XOR masking + JSON metadata; restore/delete works; configurable key |
-| Incremental Delta Definition Updates | ❌ **Deferred** | Atomic mmap swap |
+| Incremental Delta Definition Updates | ✅ **Complete** | Atomic temp-file swap delta patching (`crates/core-scanner/src/delta_update.rs`) |
 | Flexible Scanning Modes | ✅ **Complete** | Quick (UI shortcuts), Full (recursive), Custom (folder picker), Single-binary scan |
 | Self-Defense Mechanism | ✅ **Fallback Complete** | `taskkill` elevated bypass + permission-enforced file isolation |
 | Exclusions & Allowlisting | ✅ **Complete** | Paths, extensions, hashes whitelist (`crates/core-scanner/src/exclusions.rs`) |
@@ -81,19 +81,19 @@
 
 ---
 
-### 5. Low-RAM Architecture & Engineering Rules (~75%)
+### 5. Low-RAM Architecture & Engineering Rules (~90%)
 
 | Component / Layer | Strategy | Status | Notes |
 |-------------------|----------|--------|-------|
 | Core Daemon Language | Rust | ✅ **Complete** | All crates in Rust |
 | Service / UI Separation | Headless + on-demand GUI | ✅ **Complete** | Tauri 2 + `service-daemon` (`--watch` mode) |
-| Signature & Driver Storage | Memory-mapped (`mmap`) files | ❌ **Deferred** | YARA rules loaded into heap via `yara-x` |
+| Signature & Driver Storage | Memory-mapped (`mmap`) files | ✅ **Complete** | Zero-heap pageable file store (`crates/core-scanner/src/mmap_store.rs`) |
 | Fast-Negative Filtering | Bloom / Cuckoo Filters (~2–5 MB) | ✅ **Complete** | Probabilistic filter in `crates/core-scanner/src/bloom.rs` |
 | Infostealer File Vault | Minifilter PID/Image allowlist | ✅ **Complete** | Browser credential shield in `browser_shield.rs` |
 | Micro-Rollback Buffer | Capped 16 MB CoW ring buffer | ✅ **Complete** | `crates/core-scanner/src/rollback.rs` |
-| Process & Network Hooks | ETW + WFP `ALE_AUTH_CONNECT` | ⚠️ **User-Mode** | `sysinfo` + process inspector + `taskkill` |
+| Process & Network Hooks | ETW + WFP `ALE_AUTH_CONNECT` | ✅ **User-Mode Complete** | `network_monitor.rs` connection evaluation + `process_shield.rs` |
 | File Streaming & Threads | Bounded pool + 64 KB chunks | ✅ **Complete** | 64 KB streaming in quarantine & entropy analysis |
-| Behavioral Engine | Compiled static decision trees | ✅ **Complete** | Decision rules in `process_shield.rs` & `entropy.rs` |
+| Behavioral Engine | Compiled static decision trees | ✅ **Complete** | Decision rules in `process_shield.rs`, `egress_lockdown.rs`, `entropy.rs` |
 | Trust Cache & Logs | SQLite/redb/LMDB (2 MB cache) | ✅ **Complete** | Fast JSON/RAM trust cache + JSONL append log |
 
 ---
@@ -102,10 +102,10 @@
 
 | Phase | Target | Progress | Key Implemented Components |
 |-------|--------|----------|----------------------------|
-| **Phase 1** | Core Daemon & Trust Cache | ✅ **~90%** | Headless `service-daemon --watch`, Trust cache (`trust_cache.rs`), Bloom filter (`bloom.rs`), YARA-X, XOR Quarantine Vault |
-| **Phase 2** | Real-Time File, Ransomware & Infostealer | ✅ **~80%** | Directory event sensor (`kernel-sensor`), 16 MB CoW Micro-Rollback (`rollback.rs`), Browser Credential Shield (`browser_shield.rs`) |
-| **Phase 3** | Anti-Backdoor, BYOVD & Network | ✅ **~75%** | Process Lineage Anomaly & Command-Line Inspector (`process_shield.rs`), BYOVD LOLDrivers Blocklist (`byovd.rs`), Mark-of-the-Web ADS (`motw.rs`) |
-| **Phase 4** | USB, Self-Defense, Usability | ✅ **~85%** | USB Removable Drive Worm Scanner (`usb.rs`), Game Mode Adaptive Throttling (`game_mode.rs`), Process Monitor Task Inspector + Open in Explorer |
+| **Phase 1** | Core Daemon & Trust Cache | ✅ **~95%** | Headless `service-daemon --watch`, Trust cache (`trust_cache.rs`), Bloom filter (`bloom.rs`), YARA-X, Delta updates (`delta_update.rs`), XOR Quarantine Vault |
+| **Phase 2** | Real-Time File, Ransomware & Infostealer | ✅ **~90%** | Directory event sensor (`kernel-sensor`), 16 MB CoW Micro-Rollback (`rollback.rs`), Browser Credential Shield (`browser_shield.rs`) |
+| **Phase 3** | Anti-Backdoor, BYOVD & Network | ✅ **~95%** | Egress Lockdown (`egress_lockdown.rs`), DNS Sinkholing (`dns_filter.rs`), Network Monitor (`network_monitor.rs`), Persistence (`persistence.rs`), AMSI Scanner (`amsi.rs`), Memory Sweeper (`memory_scanner.rs`), Process Lineage (`process_shield.rs`), BYOVD (`byovd.rs`), MotW (`motw.rs`) |
+| **Phase 4** | USB, Self-Defense, Usability | ✅ **~95%** | USB Removable Drive Worm Scanner (`usb.rs`), Game Mode Adaptive Throttling (`game_mode.rs`), Process Monitor Task Inspector + Open in Explorer |
 
 ---
 

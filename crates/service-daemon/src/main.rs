@@ -58,7 +58,7 @@ fn main() {
     )
     .expect("Scan failed");
 
-    println!("\rScan complete. Checked {} file(s) in {} ms.", report.files_scanned, report.duration_ms);
+    println!("\rScan complete. Checked {} file(s) ({} skipped) in {} ms.", report.files_scanned, report.files_skipped, report.duration_ms);
 
     if report.findings.is_empty() {
         println!("Status: Clean. No threats found.");

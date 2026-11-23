@@ -1,12 +1,19 @@
+pub mod amsi;
 pub mod bloom;
 pub mod browser_shield;
 pub mod byovd;
+pub mod delta_update;
+pub mod dns_filter;
+pub mod egress_lockdown;
 pub mod entropy;
 pub mod exclusions;
 pub mod game_mode;
 pub mod hasher;
 pub mod matcher;
+pub mod memory_scanner;
+pub mod mmap_store;
 pub mod motw;
+pub mod persistence;
 pub mod process_shield;
 pub mod rollback;
 pub mod scan_log;
@@ -29,6 +36,8 @@ pub struct ScanResult {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScanReport {
     pub files_scanned: usize,
+    #[serde(default)]
+    pub files_skipped: usize,
     pub duration_ms: u128,
     pub findings: Vec<ScanResult>,
 }
@@ -54,6 +63,7 @@ where
     let start = Instant::now();
     let rules = matcher::load_rules(rules_dir)?;
     let mut files_scanned = 0;
+    let mut files_skipped = 0;
     let mut findings = Vec::new();
 
     if !root.exists() {
@@ -64,18 +74,21 @@ where
     let mut trust_cache = TrustCache::load_from_path(&cache_path);
     let exclusions = Exclusions::load_from_path(&exclusions_path);
 
-    let mut process_file = |path: &Path, scanned: &mut usize, found: &mut Vec<ScanResult>| {
+    let mut process_file = |path: &Path, scanned: &mut usize, skipped: &mut usize, found: &mut Vec<ScanResult>| {
         if exclusions.is_excluded(path, None) {
             return;
         }
 
-        *scanned += 1;
-        on_file(*scanned, path);
-
         let metadata = match std::fs::metadata(path) {
             Ok(m) => m,
-            Err(_) => return,
+            Err(_) => {
+                *skipped += 1;
+                return;
+            }
         };
+
+        *scanned += 1;
+        on_file(*scanned, path);
         let mtime_secs = metadata
             .modified()
             .ok()
@@ -133,11 +146,18 @@ where
     };
 
     if root.is_file() {
-        process_file(root, &mut files_scanned, &mut findings);
+        process_file(root, &mut files_scanned, &mut files_skipped, &mut findings);
     } else {
-        for entry in WalkDir::new(root).into_iter().filter_map(Result::ok) {
-            if entry.file_type().is_file() {
-                process_file(entry.path(), &mut files_scanned, &mut findings);
+        for item in WalkDir::new(root) {
+            match item {
+                Ok(entry) => {
+                    if entry.file_type().is_file() {
+                        process_file(entry.path(), &mut files_scanned, &mut files_skipped, &mut findings);
+                    }
+                }
+                Err(_) => {
+                    files_skipped += 1;
+                }
             }
         }
     }
@@ -157,6 +177,7 @@ where
 
     Ok(ScanReport {
         files_scanned,
+        files_skipped,
         duration_ms,
         findings,
     })
@@ -208,7 +229,7 @@ mod tests {
         let finding = &report.findings[0];
         assert_eq!(finding.matched_rule.as_deref(), Some("Test_Suspicious_Pattern"));
 
-        // Quarantine the infected file
+        // 1. Quarantine the infected file
         let entry = quarantine::quarantine_file(
             Path::new(&finding.path),
             &finding.sha256,
@@ -219,14 +240,29 @@ mod tests {
         // Verify original file is gone
         assert!(!infected_file.exists());
 
-        // Restore file
+        // 2. Restore file and verify hash matches original
         let restored_path = quarantine::restore_file(&entry.id, &vault_dir)
             .expect("Restore failed");
 
-        // Verify file is back with original content
         assert!(restored_path.exists());
-        let restored_content = std::fs::read(&restored_path).unwrap();
-        assert_eq!(restored_content, virus_content);
+        let restored_hash = hasher::sha256_file(&restored_path).expect("Hashing restored failed");
+        assert_eq!(restored_hash, finding.sha256);
+
+        // 3. Permanently delete file and confirm both .quar and .json are removed
+        let re_quarantined = quarantine::quarantine_file(
+            &restored_path,
+            &finding.sha256,
+            "Test_Suspicious_Pattern",
+            &vault_dir,
+        ).unwrap();
+        let quar_file = vault_dir.join(format!("{}.quar", re_quarantined.id));
+        let meta_file = vault_dir.join(format!("{}.json", re_quarantined.id));
+        assert!(quar_file.exists());
+        assert!(meta_file.exists());
+
+        quarantine::delete_permanently(&re_quarantined.id, &vault_dir).unwrap();
+        assert!(!quar_file.exists());
+        assert!(!meta_file.exists());
 
         // Cleanup
         let _ = std::fs::remove_dir_all(&temp_dir);
