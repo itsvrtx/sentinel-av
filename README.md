@@ -6,7 +6,11 @@
 [](https://www.rust-lang.org/)
 [](https://v2.tauri.app/)
 
-![alt text](screenshots/image.png)
+&lt;p align=&quot;center&quot;&gt;
+  &lt;img src=&quot;screenshots/image.png&quot; alt=&quot;Sentinel AV Threat Scanner&quot; width=&quot;820&quot; /&gt;
+  &lt;br /&gt;
+  &lt;sub&gt;&lt;b&gt;Threat Scanner&lt;/b&gt; — Live YARA-X folder scanning with real-time file progress&lt;/sub&gt;
+&lt;/p&gt;
 
 ---
 
@@ -29,16 +33,31 @@ Traditional antivirus suites often bundle heavy runtimes, background updaters, o
 - **Capped 16 MB CoW Micro-Rollback (`rollback.rs`):** Bounded ring buffer for ransomware file-write protection.
 - **Game Mode (`game_mode.rs`):** Defers background scan work when active so gaming or heavy workloads stay smooth.
 
-![alt text](screenshots/image-1.png)
+&lt;p align=&quot;center&quot;&gt;
+  &lt;img src=&quot;screenshots/image-1.png&quot; alt=&quot;Sentinel AV Low RAM Usage&quot; width=&quot;720&quot; /&gt;
+  &lt;br /&gt;
+  &lt;sub&gt;&lt;b&gt;Low Memory Footprint&lt;/b&gt; — Minimal RAM consumption during operation&lt;/sub&gt;
+&lt;/p&gt;
 
 ### Detection, Quarantine & Notifications
 - **YARA-X Rule Engine (`rules/*.yar`):** Embedded and external `.yar` rules for trojans, droppers, RATs, webshells, PowerShell downloaders, ransomware notes, and reverse shells (with `std::hint::black_box` protection so embedded test signatures don't trigger false positives on the binary itself).
 - **Per-File AES-256-GCM Quarantine Vault (`crates/quarantine`):** Neutralizes flagged files using 64 KB chunked AES-256-GCM authenticated encryption with a unique random key per file (`SQV1` format). **Nothing is ever deleted silently**—users can inspect the threat rule, original path, and SHA-256 hash, then choose **Restore (Safe)** or **Delete**.
 - **Native Windows Toast Notifications:** Sends Windows notifications when a scan completes cleanly or when a threat is detected—urging immediate action and bringing Sentinel AV straight to the **Quarantine Vault** tab when clicked.
 
-![alt text](screenshots/image-2.png)
-
-![alt text](screenshots/Screenshot%20(1).png)
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;td align=&quot;center&quot; width=&quot;50%&quot;&gt;
+      &lt;img src=&quot;screenshots/image-2.png&quot; alt=&quot;Quarantine Vault&quot; width=&quot;100%&quot; /&gt;
+      &lt;br /&gt;
+      &lt;sub&gt;&lt;b&gt;Quarantine Vault&lt;/b&gt; — User-approved Restore &amp; Delete&lt;/sub&gt;
+    &lt;/td&gt;
+    &lt;td align=&quot;center&quot; width=&quot;50%&quot;&gt;
+      &lt;img src=&quot;screenshots/Screenshot%20(1).png&quot; alt=&quot;Windows Toast Notification&quot; width=&quot;100%&quot; /&gt;
+      &lt;br /&gt;
+      &lt;sub&gt;&lt;b&gt;Windows Notification&lt;/b&gt; — Instant scan &amp; threat alerts&lt;/sub&gt;
+    &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
 
 ### User-Friendly 5-Tab Desktop UI & System Tray
 - **Threat Scanner:** Quick location shortcuts (Downloads, Desktop, Documents), native File Explorer folder picker (`rfd`), live file-by-file progress stream, and collapsible scanned-files history.
@@ -46,9 +65,20 @@ Traditional antivirus suites often bundle heavy runtimes, background updaters, o
 - **Process Monitor:** Live auto-refreshing task list with sortable **CPU %** and **Memory** columns, search filter, suspicious-process highlighting, and a **Task Inspector** (executable path, command-line args, **Open File Location**, **Scan File with Sentinel**, and **End Task**).
 - **Signatures & Scan Logs:** View active YARA-X rules and persistent JSONL scan audit logs (`scan_log.rs`), plus **Dark/Light mode**, **Fullscreen (`F11`)**, and **System Tray** integration.
 
-![alt text](screenshots/image-4.png)
-
-![alt text](screenshots/image-3.png)
+&lt;table&gt;
+  &lt;tr&gt;
+    &lt;td align=&quot;center&quot; width=&quot;50%&quot;&gt;
+      &lt;img src=&quot;screenshots/image-4.png&quot; alt=&quot;Process Monitor &amp; Task Inspector&quot; width=&quot;100%&quot; /&gt;
+      &lt;br /&gt;
+      &lt;sub&gt;&lt;b&gt;Process Monitor&lt;/b&gt; — Sortable CPU/RAM &amp; Task Inspector&lt;/sub&gt;
+    &lt;/td&gt;
+    &lt;td align=&quot;center&quot; width=&quot;50%&quot;&gt;
+      &lt;img src=&quot;screenshots/image-3.png&quot; alt=&quot;Sentinel AV Light Mode&quot; width=&quot;100%&quot; /&gt;
+      &lt;br /&gt;
+      &lt;sub&gt;&lt;b&gt;Light Mode&lt;/b&gt; — Clean, accessible theme toggle&lt;/sub&gt;
+    &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
 
 ### Behavioral & Network Shields
 - **Attack Surface Modules (`core-scanner` & `kernel-sensor`):** AMSI script buffer inspection (`amsi.rs`), Windows Mark-of-the-Web `:Zone.Identifier` checks (`motw.rs`), browser credential vault protection (`browser_shield.rs`), BYOVD vulnerable driver blocklist (`byovd.rs`), startup persistence checks (`persistence.rs`), process lineage analysis (`process_shield.rs`), DNS sinkholing (`dns_filter.rs`), egress lockdown (`egress_lockdown.rs`), network socket evaluation (`network_monitor.rs`), and USB autorun/LNK scanning (`usb.rs`).
