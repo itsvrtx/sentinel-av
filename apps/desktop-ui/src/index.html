@@ -535,6 +535,88 @@
       min-height: 18px;
     }
 
+    .history-toggle-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 2px 4px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      transition: all var(--transition);
+    }
+
+    .history-toggle-btn:hover {
+      background: var(--surface-3);
+      color: var(--text-main);
+      border-color: var(--accent);
+    }
+
+    .history-toggle-btn svg {
+      transition: transform 0.2s ease;
+    }
+
+    .scanned-files-panel {
+      margin-top: 10px;
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .scanned-files-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .scanned-files-list {
+      max-height: 220px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding-right: 4px;
+    }
+
+    .scanned-file-item {
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: var(--surface-2);
+      color: var(--text-muted);
+      word-break: break-all;
+      border-left: 3px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .scanned-file-item.threat {
+      color: var(--danger) !important;
+      background: rgba(239, 68, 68, 0.12) !important;
+      border-left: 3px solid var(--danger) !important;
+      font-weight: 600;
+    }
+
+    .scanned-files-empty {
+      padding: 12px;
+      text-align: center;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
     .progress-bar-container {
       height: 6px;
       background: var(--surface-3);
@@ -744,7 +826,18 @@
     }
 
     tr:last-child td { border-bottom: none; }
+    tbody tr {
+      cursor: pointer;
+      transition: background 0.15s ease, outline 0.15s ease;
+    }
+
     tbody tr:hover { background: var(--surface-2); }
+
+    tr.selected-task-row {
+      background: rgba(99, 102, 241, 0.18) !important;
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
 
     tr.trojan-row {
       background: var(--danger-bg);
@@ -752,6 +845,90 @@
 
     tr.trojan-row:hover {
       background: rgba(239, 68, 68, 0.2);
+    }
+
+    .task-inspector-card {
+      margin-top: 18px;
+      padding: 16px 20px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .task-inspector-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+
+    .task-inspector-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text-main);
+    }
+
+    .task-inspector-body {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .inspector-detail-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .inspector-detail-row label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .inspector-path-box {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--surface-1);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      word-break: break-all;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .inspector-stats-row {
+      display: flex;
+      gap: 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .inspector-stats-row strong {
+      color: var(--text-main);
+    }
+
+    .inspector-actions-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 4px;
     }
 
     .pid-cell {
@@ -1002,12 +1179,27 @@
         <!-- File Path Scanned Display Box (Directly below stats) -->
         <div class="active-scan-path-box" id="activeScanPathBox">
           <div class="active-scan-header">
-            <span>Currently Scanning File Path</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>Currently Scanning File Path</span>
+              <button type="button" class="history-toggle-btn" id="toggleScanHistoryBtn" onclick="toggleScanHistory()" title="Toggle scanned files list">
+                <svg id="historyChevron" class="icon-sm" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+            </div>
             <span id="activeScanCounter">Ready to scan</span>
           </div>
           <div class="active-scan-path" id="activeScanPath">Select a folder and click Start Scan to begin analysis.</div>
           <div class="progress-bar-container">
             <div class="progress-bar-fill" id="scanProgressBar"></div>
+          </div>
+          <!-- Collapsible Scanned Files History Panel -->
+          <div class="scanned-files-panel" id="scannedFilesPanel" style="display: none;">
+            <div class="scanned-files-panel-header">
+              <span>Scanned Files History</span>
+              <span id="scannedFilesPanelCount">0 files</span>
+            </div>
+            <div class="scanned-files-list" id="scannedFilesList">
+              <div class="scanned-files-empty">No files scanned yet.</div>
+            </div>
           </div>
         </div>
 
@@ -1077,13 +1269,25 @@
         </div>
 
         <div class="vault-toolbar">
-          <input
-            type="text"
-            id="processSearchInput"
-            class="search-input"
-            placeholder="Filter processes by name or PID..."
-            oninput="filterProcesses()"
-          />
+          <div style="position: relative; flex: 1; max-width: 440px;">
+            <input
+              type="text"
+              id="processSearchInput"
+              class="search-input"
+              style="width: 100%; padding-right: 32px;"
+              placeholder="Search by process name, PID, or file path..."
+              oninput="filterProcesses()"
+            />
+            <button
+              id="clearProcessSearchBtn"
+              type="button"
+              onclick="clearProcessSearch()"
+              style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; display: none; padding: 2px;"
+              title="Clear search"
+            >
+              <svg class="icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
           <span style="font-size: 12px; color: var(--text-muted);" id="processStatusText">
             Monitoring active tasks...
           </span>
@@ -1109,6 +1313,22 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Selected Task Inspector Box -->
+        <div class="task-inspector-card" id="taskInspectorCard">
+          <div class="task-inspector-header">
+            <div class="task-inspector-title">
+              <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              <span id="inspectorTitle">Selected Task: None</span>
+            </div>
+            <div id="inspectorBadge"></div>
+          </div>
+          <div class="task-inspector-body" id="inspectorBody">
+            <div style="color: var(--text-muted); font-size: 12px; font-style: italic;">
+              Select any running task in the table above to view its exact executable location on disk, command line arguments, and quick actions.
+            </div>
+          </div>
         </div>
       </section>
     </div>
@@ -1145,6 +1365,45 @@
     let processAutoRefreshTimer = null;
     let isFetchingProcesses = false;
     let scanDurationTimer = null;
+    let scannedFilesRecord = [];
+    let scanHistoryOpen = false;
+
+    function toggleScanHistory() {
+      scanHistoryOpen = !scanHistoryOpen;
+      const panel = document.getElementById("scannedFilesPanel");
+      const chevron = document.getElementById("historyChevron");
+      if (panel && chevron) {
+        panel.style.display = scanHistoryOpen ? "flex" : "none";
+        chevron.style.transform = scanHistoryOpen ? "rotate(180deg)" : "rotate(0deg)";
+      }
+      if (scanHistoryOpen) {
+        renderScannedFilesList();
+      }
+    }
+
+    function renderScannedFilesList() {
+      const list = document.getElementById("scannedFilesList");
+      const count = document.getElementById("scannedFilesPanelCount");
+      if (!list || !count) return;
+
+      count.textContent = `${scannedFilesRecord.length.toLocaleString()} files`;
+      if (scannedFilesRecord.length === 0) {
+        list.innerHTML = `<div class="scanned-files-empty">No files scanned yet.</div>`;
+        return;
+      }
+
+      list.innerHTML = scannedFilesRecord.map(item => `
+        <div class="scanned-file-item ${item.isThreat ? 'threat' : ''}">
+          ${item.isThreat
+            ? '<svg class="icon-sm" style="color: var(--danger); flex-shrink: 0;" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+            : '<svg class="icon-sm" style="color: var(--success); flex-shrink: 0;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>'
+          }
+          <span>${escapeHtml(item.path)}</span>
+        </div>
+      `).join("");
+
+      list.scrollTop = list.scrollHeight;
+    }
 
     // Theme Management
     function initTheme() {
@@ -1312,6 +1571,8 @@
       scanBtnText.textContent = "Scanning…";
       findingsSection.style.display = "none";
       findingsList.innerHTML = "";
+      scannedFilesRecord = [];
+      renderScannedFilesList();
 
       statFiles.textContent = "0";
       statThreats.textContent = "0";
@@ -1336,6 +1597,10 @@
             statFiles.textContent = count.toLocaleString();
             activeScanCounter.textContent = `${count.toLocaleString()} file(s) checked`;
             activeScanPath.textContent = current_file;
+            scannedFilesRecord.push({ path: current_file, isThreat: false });
+            if (scanHistoryOpen) {
+              renderScannedFilesList();
+            }
           });
         } catch (e) {
           console.warn("Could not register scan-progress listener:", e);
@@ -1360,6 +1625,19 @@
         clearInterval(scanDurationTimer);
 
         const threats = summary.quarantined || [];
+        const threatPathSet = new Set(threats.map(t => t.original_path));
+        for (const item of scannedFilesRecord) {
+          if (threatPathSet.has(item.path)) {
+            item.isThreat = true;
+          }
+        }
+        for (const t of threats) {
+          if (!scannedFilesRecord.some(r => r.path === t.original_path)) {
+            scannedFilesRecord.push({ path: t.original_path, isThreat: true });
+          }
+        }
+        renderScannedFilesList();
+
         statFiles.textContent = summary.files_scanned.toLocaleString();
         statDuration.textContent = `${summary.duration_ms} ms`;
         statThreats.textContent = threats.length;
@@ -1531,10 +1809,10 @@
     // Auto-refresh process monitor
     function startProcessAutoRefresh() {
       if (processAutoRefreshTimer) return;
-      // Refresh processes every 3 seconds while on Process tab
+      // Refresh processes every 1.2 seconds while on Process tab for responsive monitoring
       processAutoRefreshTimer = setInterval(() => {
         loadProcesses(true);
-      }, 3000);
+      }, 1200);
     }
 
     function stopProcessAutoRefresh() {
@@ -1566,8 +1844,7 @@
       try {
         const processes = await invoke("get_system_processes");
         allProcesses = processes.sort((a, b) => b.cpu_usage - a.cpu_usage);
-        statusText.textContent = `Monitoring ${allProcesses.length} active process(es)`;
-        renderProcesses(allProcesses);
+        filterProcesses();
       } catch (e) {
         console.error("Failed to load processes:", e);
         if (!isAutoRefresh) {
@@ -1582,15 +1859,18 @@
       }
     }
 
+    let selectedProcessPid = null;
+
     function renderProcesses(list) {
       const tbody = document.getElementById("processTableBody");
       if (list.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">No matching processes found.</td></tr>`;
+        updateInspector();
         return;
       }
 
       tbody.innerHTML = list.map(p => `
-        <tr class="${p.is_trojan ? 'trojan-row' : ''}">
+        <tr class="${p.is_trojan ? 'trojan-row' : ''} ${selectedProcessPid === p.pid ? 'selected-task-row' : ''}" onclick="selectTask(${p.pid}, event)" title="Click to view file location and details">
           <td class="pid-cell">${p.pid}</td>
           <td style="font-weight: 600;">${escapeHtml(p.name)}</td>
           <td style="color: var(--accent); font-weight: 600;">${p.cpu_usage.toFixed(1)}%</td>
@@ -1602,22 +1882,171 @@
             }
           </td>
           <td>
-            <button class="btn btn-secondary btn-sm" onclick="killProcess(${p.pid}, '${escapeHtml(p.name)}')">
+            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); killProcess(${p.pid}, '${escapeHtml(p.name)}')">
               <svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
               End Task
             </button>
           </td>
         </tr>
       `).join("");
+
+      updateInspector();
+    }
+
+    function selectTask(pid, event) {
+      if (event && event.target && event.target.closest("button")) {
+        return;
+      }
+      selectedProcessPid = pid;
+      renderProcesses(getFilteredProcesses());
+    }
+
+    function updateInspector() {
+      const card = document.getElementById("taskInspectorCard");
+      const title = document.getElementById("inspectorTitle");
+      const badge = document.getElementById("inspectorBadge");
+      const body = document.getElementById("inspectorBody");
+      if (!card || !title || !body) return;
+
+      if (!selectedProcessPid) {
+        title.textContent = "Selected Task: None";
+        if (badge) badge.innerHTML = "";
+        body.innerHTML = `
+          <div style="color: var(--text-muted); font-size: 12px; font-style: italic;">
+            Select any running task in the table above to view its exact executable location on disk, command line arguments, and quick actions.
+          </div>`;
+        return;
+      }
+
+      const p = allProcesses.find(item => item.pid === selectedProcessPid);
+      if (!p) {
+        title.textContent = `Process PID ${selectedProcessPid} (Terminated / Exited)`;
+        if (badge) badge.innerHTML = `<span class="badge-trojan">EXITED</span>`;
+        body.innerHTML = `<div style="color: var(--text-muted); font-size: 12px;">This process is no longer active in the system process list.</div>`;
+        return;
+      }
+
+      title.textContent = `${p.name} (PID: ${p.pid})`;
+      if (badge) {
+        badge.innerHTML = p.is_trojan
+          ? '<span class="badge-trojan">SUSPICIOUS TROJAN PATTERN</span>'
+          : '<span class="badge-clean"><svg class="icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Verified Task</span>';
+      }
+
+      const locationText = p.exe_path || "System / Protected kernel process (path concealed by Windows OS)";
+      const hasValidPath = Boolean(p.exe_path);
+
+      body.innerHTML = `
+        <div class="inspector-detail-row">
+          <label>Executable Location on Disk:</label>
+          <div class="inspector-path-box">
+            <span>${escapeHtml(locationText)}</span>
+            ${hasValidPath ? `<button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); copyPath('${escapeHtml(p.exe_path)}')" title="Copy Path"><svg class="icon-sm" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy</button>` : ''}
+          </div>
+        </div>
+        <div class="inspector-stats-row">
+          <span>CPU Usage: <strong>${p.cpu_usage.toFixed(1)}%</strong></span>
+          <span>Memory: <strong>${p.memory_mb.toFixed(1)} MB</strong></span>
+          <span>Status: <strong>${p.is_trojan ? 'Suspicious' : 'Normal'}</strong></span>
+        </div>
+        ${p.cmd ? `
+        <div class="inspector-detail-row">
+          <label>Command Line Arguments:</label>
+          <div class="inspector-path-box" style="font-size: 11px; color: var(--text-muted);">
+            <span>${escapeHtml(p.cmd)}</span>
+          </div>
+        </div>` : ''}
+        <div class="inspector-actions-bar">
+          ${hasValidPath ? `
+            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); openTaskLocation('${escapeHtml(p.exe_path)}')">
+              <svg class="icon-sm" viewBox="0 0 24 24"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 8 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+              Open File Location
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); scanTaskBinary('${escapeHtml(p.exe_path)}')">
+              <svg class="icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              Scan File with Sentinel
+            </button>
+          ` : ''}
+          <button class="btn btn-secondary btn-sm" style="color: var(--danger); border-color: var(--danger);" onclick="event.stopPropagation(); killProcess(${p.pid}, '${escapeHtml(p.name)}')">
+            <svg class="icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+            End Task
+          </button>
+        </div>
+      `;
+    }
+
+    async function openTaskLocation(path) {
+      const invoke = getInvoke();
+      if (!invoke) return;
+      try {
+        await invoke("open_file_location", { path });
+      } catch (e) {
+        showToast(`Could not open location: ${e}`, "error");
+      }
+    }
+
+    function scanTaskBinary(path) {
+      switchTab("tabScan");
+      const input = document.getElementById("targetInput");
+      if (input) {
+        input.value = path;
+      }
+      showToast(`Loaded binary for scanning. Click Start Scan to inspect.`, "info");
+    }
+
+    function copyPath(path) {
+      if (!navigator.clipboard) {
+        showToast("Clipboard access unavailable.", "error");
+        return;
+      }
+      navigator.clipboard.writeText(path).then(() => {
+        showToast("Path copied to clipboard.", "success");
+      }).catch(() => {
+        showToast("Could not copy path.", "error");
+      });
+    }
+
+    function getFilteredProcesses() {
+      const input = document.getElementById("processSearchInput");
+      const q = input ? input.value.trim().toLowerCase() : "";
+      if (!q) return allProcesses;
+      return allProcesses.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        String(p.pid).includes(q) ||
+        (p.exe_path && p.exe_path.toLowerCase().includes(q))
+      );
     }
 
     function filterProcesses() {
-      const q = document.getElementById("processSearchInput").value.toLowerCase();
-      const filtered = allProcesses.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        String(p.pid).includes(q)
-      );
+      const input = document.getElementById("processSearchInput");
+      const clearBtn = document.getElementById("clearProcessSearchBtn");
+      const statusText = document.getElementById("processStatusText");
+      const q = input ? input.value.trim().toLowerCase() : "";
+
+      if (clearBtn) {
+        clearBtn.style.display = q ? "block" : "none";
+      }
+
+      const filtered = getFilteredProcesses();
+
+      if (statusText) {
+        if (q) {
+          statusText.textContent = `Showing ${filtered.length} of ${allProcesses.length} process(es) matching "${q}"`;
+        } else {
+          statusText.textContent = `Monitoring ${allProcesses.length} active process(es)`;
+        }
+      }
+
       renderProcesses(filtered);
+    }
+
+    function clearProcessSearch() {
+      const input = document.getElementById("processSearchInput");
+      if (input) {
+        input.value = "";
+        input.focus();
+        filterProcesses();
+      }
     }
 
     async function killProcess(pid, name) {
@@ -1627,8 +2056,12 @@
       const invoke = getInvoke();
       if (!invoke) return;
       try {
-        await invoke("kill_process", { pid });
-        showToast(`Terminated process ${name} (PID: ${pid})`, "success");
+        const ok = await invoke("kill_process", { pid });
+        if (ok) {
+          showToast(`Terminated process ${name} (PID: ${pid})`, "success");
+        } else {
+          showToast(`Could not terminate ${name} (PID: ${pid}). Administrator rights may be needed.`, "error");
+        }
         await loadProcesses();
       } catch (e) {
         showToast(`Could not end task: ${e}`, "error");

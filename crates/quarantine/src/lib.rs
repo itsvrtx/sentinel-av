@@ -4,7 +4,19 @@ use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const XOR_KEY: u8 = 0xAA;
+// shortcut: XOR masking for MVP isolation, upgrade to AES-256-GCM when key management service is integrated
+pub fn get_xor_key() -> u8 {
+    std::env::var("SENTINEL_XOR_KEY")
+        .ok()
+        .and_then(|s| {
+            if let Some(stripped) = s.strip_prefix("0x") {
+                u8::from_str_radix(stripped, 16).ok()
+            } else {
+                s.parse::<u8>().ok()
+            }
+        })
+        .unwrap_or(0xAA)
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QuarantineEntry {
@@ -20,6 +32,7 @@ pub struct QuarantineEntry {
 
 /// Copies a file in 64 KB chunks while applying an XOR mask to neutralize it.
 fn stream_xor_copy(src: &Path, dst: &Path) -> io::Result<u64> {
+    let key = get_xor_key();
     let mut input = File::open(src)?;
     let mut output = File::create(dst)?;
     let mut buffer = [0u8; 64 * 1024];
@@ -31,7 +44,7 @@ fn stream_xor_copy(src: &Path, dst: &Path) -> io::Result<u64> {
             break;
         }
         for byte in &mut buffer[..n] {
-            *byte ^= XOR_KEY;
+            *byte ^= key;
         }
         output.write_all(&buffer[..n])?;
         total_bytes += n as u64;

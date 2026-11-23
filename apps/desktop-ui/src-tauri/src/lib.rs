@@ -31,6 +31,8 @@ struct ProcessInfo {
     cpu_usage: f32,
     memory_mb: f64,
     is_trojan: bool,
+    exe_path: String,
+    cmd: String,
 }
 
 #[derive(serde::Serialize)]
@@ -204,12 +206,16 @@ fn get_system_processes() -> Result<Vec<ProcessInfo>, String> {
         .map(|proc| {
             let name_lower = proc.name().to_lowercase();
             let is_trojan = trojan_keywords.iter().any(|kw| name_lower.contains(kw));
+            let exe_path = proc.exe().map(|p| p.display().to_string()).unwrap_or_default();
+            let cmd = proc.cmd().join(" ");
             ProcessInfo {
                 pid: proc.pid().as_u32(),
                 name: proc.name().to_string(),
                 cpu_usage: proc.cpu_usage(),
                 memory_mb: proc.memory() as f64 / 1024.0 / 1024.0,
                 is_trojan,
+                exe_path,
+                cmd,
             }
         })
         .filter(|p| p.memory_mb > 1.0)
@@ -225,13 +231,63 @@ fn kill_process(pid: u32) -> Result<bool, String> {
     let mut guard = SYSTEM_MONITOR.lock().map_err(|e| e.to_string())?;
     let mut sys = guard.take().unwrap_or_else(System::new_all);
     sys.refresh_processes();
-    let result = if let Some(proc) = sys.process(Pid::from_u32(pid)) {
-        Ok(proc.kill())
-    } else {
-        Err(format!("Process with PID {pid} not found."))
-    };
+    let sys_killed = sys.process(Pid::from_u32(pid)).map(|proc| proc.kill()).unwrap_or(false);
     *guard = Some(sys);
-    result
+
+    if sys_killed {
+        return Ok(true);
+    }
+
+    // Fallback: On Windows, sysinfo TerminateProcess may fail without elevated rights, try taskkill
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        if let Ok(out) = std::process::Command::new("taskkill")
+            .args(["/F", "/PID", &pid.to_string()])
+            .creation_flags(0x08000000) // CREATE_NO_WINDOW
+            .output()
+        {
+            if out.status.success() {
+                return Ok(true);
+            }
+        }
+    }
+
+    Err(format!(
+        "Failed to terminate process {pid}. Administrator privilege may be required for system processes."
+    ))
+}
+
+#[tauri::command]
+fn open_file_location(path: String) -> Result<(), String> {
+    let p = Path::new(&path);
+    if !p.exists() {
+        return Err(format!("File does not exist: {path}"));
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        std::process::Command::new("explorer")
+            .args(["/select,", &path])
+            .creation_flags(0x08000000)
+            .spawn()
+            .map_err(|e| e.to_string())?;
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let parent = p.parent().unwrap_or(p);
+        let _ = std::process::Command::new("xdg-open").arg(parent).spawn();
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+fn get_scan_logs() -> Result<Vec<core_scanner::scan_log::ScanLogEntry>, String> {
+    let log_path = core_scanner::scan_log::get_default_log_path();
+    core_scanner::scan_log::read_recent_logs(&log_path, 20).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -297,6 +353,8 @@ pub fn run() {
             delete_item,
             get_system_processes,
             kill_process,
+            open_file_location,
+            get_scan_logs,
             get_active_signatures
         ])
         .run(tauri::generate_context!())

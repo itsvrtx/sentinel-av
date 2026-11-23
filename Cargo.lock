@@ -617,7 +617,9 @@ dependencies = [
 name = "core-scanner"
 version = "0.1.0"
 dependencies = [
+ "quarantine",
  "serde",
+ "serde_json",
  "sha2 0.10.9",
  "walkdir",
  "yara-x",
@@ -4346,6 +4348,7 @@ name = "service-daemon"
 version = "0.1.0"
 dependencies = [
  "core-scanner",
+ "kernel-sensor",
  "quarantine",
 ]
 
