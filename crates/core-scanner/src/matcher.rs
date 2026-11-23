@@ -27,7 +27,10 @@ const OBFUSCATED_EICAR: &[u8] = &[
 ];
 
 fn get_embedded_eicar() -> String {
-    let decoded: Vec<u8> = OBFUSCATED_EICAR.iter().map(|b| b ^ 0x5C).collect();
+    // black_box stops LLVM from constant-folding the XOR back into plaintext inside the .exe
+    let encoded = std::hint::black_box(OBFUSCATED_EICAR);
+    let key = std::hint::black_box(0x5C);
+    let decoded: Vec<u8> = encoded.iter().map(|b| b ^ key).collect();
     String::from_utf8(decoded).unwrap_or_default()
 }
 
@@ -105,6 +108,16 @@ pub fn load_rules(rules_dir: &Path) -> Result<Rules, String> {
     }
 
     Ok(compiler.build())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_embedded_eicar_decodes() {
+        assert!(get_embedded_eicar().contains("EICAR-STANDARD-ANTIVIRUS-TEST-FILE"));
+    }
 }
 
 /// Scans a single file against compiled YARA rules and returns the first matched rule name.

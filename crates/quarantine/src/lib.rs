@@ -159,10 +159,11 @@ pub fn quarantine_file(
 
     // Generate fresh 256-bit random key per quarantined file
     let key = Aes256Gcm::generate_key(&mut OsRng);
-    let key_bytes: [u8; 32] = key.into();
+    let mut key_bytes: [u8; 32] = key.into();
     let key_hex = hex::encode(&key_bytes);
 
     let file_size = stream_aes_gcm_encrypt(file_path, &quar_path, &key_bytes)?;
+    key_bytes.fill(0);
 
     // Try removing original; if readonly, clear readonly bit first
     if let Err(e) = fs::remove_file(file_path) {
@@ -193,9 +194,25 @@ pub fn quarantine_file(
 
     let json = serde_json::to_string_pretty(&entry)
         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-    fs::write(meta_path, json)?;
+    fs::write(&meta_path, json)?;
+    restrict_vault_permissions(vault_dir, &quar_path, &meta_path);
 
-    Ok(entry)
+    // The key lives only in the .json metadata; never hand it to the UI.
+    Ok(QuarantineEntry { key_hex: String::new(), ..entry })
+}
+
+/// Locks down the vault on Unix; Windows DACLs are not set here.
+/// shortcut: vault ACL hardening is Unix-only, add Windows DACLs via icacls when shipping to multi-user machines.
+fn restrict_vault_permissions(vault_dir: &Path, quar_path: &Path, meta_path: &Path) {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = fs::set_permissions(vault_dir, fs::Permissions::from_mode(0o700));
+        let _ = fs::set_permissions(quar_path, fs::Permissions::from_mode(0o600));
+        let _ = fs::set_permissions(meta_path, fs::Permissions::from_mode(0o600));
+    }
+    #[cfg(not(unix))]
+    let _ = (vault_dir, quar_path, meta_path);
 }
 
 /// Lists all quarantined files so the UI can display them to the user.
@@ -209,7 +226,8 @@ pub fn list_quarantined(vault_dir: &Path) -> io::Result<Vec<QuarantineEntry>> {
         let path = item?.path();
         if path.extension().and_then(|e| e.to_str()) == Some("json") {
             if let Ok(data) = fs::read_to_string(&path) {
-                if let Ok(entry) = serde_json::from_str::<QuarantineEntry>(&data) {
+                if let Ok(mut entry) = serde_json::from_str::<QuarantineEntry>(&data) {
+                    entry.key_hex.clear();
                     entries.push(entry);
                 }
             }
@@ -311,6 +329,7 @@ mod tests {
         let entry = quarantine_file(&sample_file, "fake_sha256", "Test_Rule", &vault_dir).unwrap();
         assert_eq!(entry.file_size, content.len() as u64);
         assert!(!sample_file.exists());
+        assert!(entry.key_hex.is_empty(), "key must not be returned to callers");
 
         // 2. Verify header and encrypted bytes differ from plaintext
         let quar_file = vault_dir.join(format!("{}.quar", entry.id));
@@ -322,6 +341,7 @@ mod tests {
         let items = list_quarantined(&vault_dir).unwrap();
         assert_eq!(items.len(), 1);
         assert_eq!(items[0].id, entry.id);
+        assert!(items[0].key_hex.is_empty(), "key must not be listed to the UI");
 
         // 4. Restore file and verify exact byte match
         let restored = restore_file(&entry.id, &vault_dir).unwrap();
