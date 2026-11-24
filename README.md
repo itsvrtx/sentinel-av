@@ -1,162 +1,185 @@
 # Sentinel AV
 
-**A free, open-source, low-RAM antivirus built in Rust & Tauri 2 — engineered under human supervision to explore the depth of AI-assisted systems programming.**
+**A free, open-source, low-RAM antivirus desktop application built in Rust and Tauri 2.**
 
-[![LICENSE](https://shields.io)](Github)
-[![Rust](https://shields.io)](https://rust-lang.org)
-![YARA](https://shields.io)
+Sentinel AV is engineered for transparency, minimal memory overhead, and inspectable security. Developed with AI-assisted workflows under human supervision (**itsvrtx**) and licensed under the **MIT License**, it pairs a streaming Rust scanning and quarantine core with a lean native-webview desktop interface—without adware, subscriptions, or telemetry upsells.
 
-<p align="center">
-<img src="screenshots/image.png" alt="Sentinel AV Threat Scanner" width="820" />
-<br />
-<sub><b>Threat Scanner</b> — Live YARA-X folder scanning with real-time file progress</sub>
-</p>
 
----
 
-## Why Rust + Tauri 2?
+## Why Rust + Tauri 2 + YARA-X
 
-Traditional antivirus suites often bundle heavy runtimes, background updaters, or Chromium-based Electron shells that consume hundreds of megabytes of RAM before a scan even starts. **Sentinel AV** was built from the ground up with:
+### Why Rust (`core-scanner`, `quarantine`, `kernel-sensor`, `service-daemon`)
 
-- **Rust (`core-scanner`, `quarantine`, `kernel-sensor`, `service-daemon`):** Zero garbage-collector pauses, predictable memory usage, and compile-time memory safety—essential for security software that parses untrusted binaries and executables.
-- **Tauri 2 + Vanilla HTML/CSS/JS (`apps/desktop-ui`):** Uses the operating system's native webview (WebView2 on Windows) instead of shipping a second browser, keeping the UI binary small and RAM usage low.
-- **YARA-X (`yara-x`):** VirusTotal's pure-Rust YARA engine for fast, memory-safe pattern matching against trojans, RATs, webshells, ransomware notes, and infostealers.
+* **Predictable memory behavior:** No garbage-collection pauses or runtime heap bloat during directory walks, hashing, or rule evaluation.
 
----
+* **Compile-time memory safety:** Strong ownership and bounds guarantees when parsing untrusted files, binaries, and filesystem metadata.
 
-## Key Features
+### Why Tauri 2 + Vanilla HTML/CSS/JS (`apps/desktop-ui`)
 
-### Low-RAM Streaming Architecture
-- **64 KB Chunked I/O:** File hashing (`sha2`) and quarantine encryption stream files in fixed 64 KB buffers so scanning multi-gigabyte files never spikes RAM.
-- **Fast-Negative Bloom Filter & Trust Cache:** `bloom.rs` and `trust_cache.rs` (`path + mtime + size + sha256`) skip unchanged clean files on repeat scans.
-- **Memory-Mapped Signatures (`mmap_store.rs`):** Loads signature databases without copying everything onto the heap.
-- **Capped 16 MB CoW Micro-Rollback (`rollback.rs`):** Bounded ring buffer for ransomware file-write protection.
-- **Game Mode (`game_mode.rs`):** Defers background scan work when active so gaming or heavy workloads stay smooth.
+* **Lean desktop footprint:** Instead of bundling a full Chromium runtime like Electron, Tauri 2 renders the interface using the operating system's native webview (**WebView2** on Windows).
 
-<p align="center">
-<img src="screenshots/image-1.png" alt="Sentinel AV Low RAM Usage" width="720" />
-<br />
-<sub><b>Low Memory Footprint</b> — Minimal RAM consumption during operation</sub>
-</p>
+* **Zero framework bloat:** The frontend lives in a single-file vanilla HTML/CSS/JS interface (`apps/desktop-ui/src/index.html`), keeping startup fast and memory usage minimal.
 
-### Detection, Quarantine & Notifications
-- **YARA-X Rule Engine (`rules/*.yar`):** Embedded and external `.yar` rules for trojans, droppers, RATs, webshells, PowerShell downloaders, ransomware notes, and reverse shells (with `std::hint::black_box` protection so embedded test signatures don't trigger false positives on the binary itself).
-- **Per-File AES-256-GCM Quarantine Vault (`crates/quarantine`):** Neutralizes flagged files using 64 KB chunked AES-256-GCM authenticated encryption with a unique random key per file (`SQV1` format). **Nothing is ever deleted silently**—users can inspect the threat rule, original path, and SHA-256 hash, then choose **Restore (Safe)** or **Delete**.
-- **Native Windows Toast Notifications:** Sends Windows notifications when a scan completes cleanly or when a threat is detected—urging immediate action and bringing Sentinel AV straight to the **Quarantine Vault** tab when clicked.
+### Why YARA-X (`yara-x`)
 
-<table>
-<tr>
-<td align="center" width="50%">
-<img src="screenshots/image-2.png" alt="Quarantine Vault" width="100%" />
-<br />
-<sub><b>Quarantine Vault</b> — User-approved Restore & Delete</sub>
-</td>
-<td align="center" width="50%">
-<img src="screenshots/Screenshot%20(1).png" alt="Windows Toast Notification" width="100%" />
-<br />
-<sub><b>Windows Notification</b> — Instant scan & threat alerts</sub>
-</td>
-</tr>
-</table>
+* **Pure-Rust pattern matching:** Integrates `yara-x` directly in-process to compile and evaluate `.yar` rules for trojans, droppers, RATs, webshells, ransomware indicators, and infostealers without C FFI overhead.
 
-### User-Friendly 5-Tab Desktop UI & System Tray
-- **Threat Scanner:** Quick location shortcuts (Downloads, Desktop, Documents), native File Explorer folder picker (`rfd`), live file-by-file progress stream, and collapsible scanned-files history.
-- **Quarantine Vault:** Searchable vault cards with threat descriptions, **Restore (Safe)**, **Restore All**, and **Delete**.
-- **Process Monitor:** Live auto-refreshing task list with sortable **CPU %** and **Memory** columns, search filter, suspicious-process highlighting, and a **Task Inspector** (executable path, command-line args, **Open File Location**, **Scan File with Sentinel**, and **End Task**).
-- **Signatures & Scan Logs:** View active YARA-X rules and persistent JSONL scan audit logs (`scan_log.rs`), plus **Dark/Light mode**, **Fullscreen (`F11`)**, and **System Tray** integration.
+### Why Choose Sentinel AV
 
-<table>
-<tr>
-<td align="center" width="50%">
-<img src="screenshots/image-4.png" alt="Process Monitor & Task Inspector" width="100%" />
-<br />
-<sub><b>Process Monitor</b> — Sortable CPU/RAM & Task Inspector</sub>
-</td>
-<td align="center" width="50%">
-<img src="screenshots/image-3.png" alt="Sentinel AV Light Mode" width="100%" />
-<br />
-<sub><b>Light Mode</b> — Clean, accessible theme toggle</sub>
-</td>
-</tr>
-</table>
+* **Free and transparent:** Open-source codebase with no adware, paid tiers, or hidden telemetry upsells.
 
-### Behavioral & Network Shields
-- **Attack Surface Modules (`core-scanner` & `kernel-sensor`):** AMSI script buffer inspection (`amsi.rs`), Windows Mark-of-the-Web `:Zone.Identifier` checks (`motw.rs`), browser credential vault protection (`browser_shield.rs`), BYOVD vulnerable driver blocklist (`byovd.rs`), startup persistence checks (`persistence.rs`), process lineage analysis (`process_shield.rs`), DNS sinkholing (`dns_filter.rs`), egress lockdown (`egress_lockdown.rs`), network socket evaluation (`network_monitor.rs`), and USB autorun/LNK scanning (`usb.rs`).
+* **Low-memory streaming design:** Bounded chunked I/O and fast-skip caches prevent memory spikes on large files or repeated scans.
 
-> **Honest Scope Note (v0.1.0):** Sentinel AV currently operates as a **user-mode** scanner, quarantine vault, and behavioral/process monitor. True Windows kernel-mode drivers (File System Minifilter, WFP network callout, ETW kernel stream, and PPL self-defense) are planned as a future VM-tested phase, as distributing kernel drivers publicly on Windows requires an Extended Validation (EV) code-signing certificate.
+* **Fully auditable:** Every Rust crate, `.yar` signature file (`rules/*.yar`), and JSONL scan log can be inspected and verified directly.
 
----
+## Applications, Tooling & AI Engineering Workflow
 
-## Why Shift to Sentinel AV?
+### Development & Runtime Stack
 
-1. **Free & Transparent:** No subscriptions, telemetry upsells, or bloated "PC optimizer" adware—every detection rule, scanned file path, and quarantine action is laid out clearly in front of you.
-2. **Lightweight Footprint:** Built around streaming I/O, trust caching, and a native OS webview rather than heavy always-on background browsers.
-3. **Inspectable & Auditable:** Modular Rust crates, human-readable YARA rules (`rules/*.yar`), and persistent JSONL scan logs (`scan_log.rs`).
+| Component | Role |
+| :--- | :--- |
+| **Rust Toolchain & Cargo** | Core workspace build, testing, and dependency management (`edition = "2024"`, `rust-version = "1.90"` in `src-tauri`) |
+| **Tauri CLI v2** | Desktop bundling, IPC command bridge, system tray, and native notifications (`tauri = "2.12.7"`) |
+| **WebView2** | Native Windows OS webview runtime powering the `apps/desktop-ui` interface |
+| **VS Code** | Primary code editor and workspace environment |
+| **Claude & Antigravity** | AI-assisted coding, architecture exploration, and task execution |
 
----
+### AI Models & Human-Supervised Workflow
+
+* **Models:** **Claude**, **Gemini Hydrogen**, **DeepSeek v4.1**, and **Nemotron 3 Ultra**
+
+* **Workflow:** Structured task specifications paired with **ponytail** skills for context and token efficiency across multi-crate tasks.
+
+* **Human Supervision (`itsvrtx`):** Architecture direction, UI/UX decisions, manual testing, security review, and release management.
+
+## Architecture & Low-RAM Streaming Mechanics
+
+Sentinel AV is designed to keep memory usage flat even when scanning large directory trees or multi-gigabyte files:
+
+* **64 KB Chunked Streaming I/O (`hasher.rs`, `quarantine/src/lib.rs`):** Both SHA-256 hashing (`sha2`) and AES-256-GCM quarantine encryption/decryption stream files in fixed **64 KB** (`64 * 1024` bytes) chunks rather than loading entire files into RAM.
+
+* **Bloom Filter (`bloom.rs`) & Trust Cache (`trust_cache.rs`):** Avoids re-scanning unchanged clean files by checking a fast-negative Bloom filter and a persistent trust cache keyed on file path, metadata (`mtime`, `size`), and SHA-256 hash (stored in `%LOCALAPPDATA%\SentinelAV\trust_cache.json` with a working-directory fallback).
+
+* **Memory-Mapped Signatures (`mmap_store.rs`):** Supports memory-mapped signature storage so rule data does not need to be duplicated across heap allocations.
+
+* **16 MB Bounded CoW Micro-Rollback (`rollback.rs`):** Provides a capped **16 MB** Copy-on-Write micro-rollback buffer for bounded recovery operations without unbounded memory growth.
+
+* **Game Mode (`game_mode.rs`):** Detects active full-screen/gaming sessions and defers background scan work to avoid interrupting system performance.
+
+## Detection, Quarantine Vault, Notifications & Shields
+
+### YARA-X Rule Engine (`rules/*.yar`)
+
+`crates/core-scanner/src/matcher.rs` compiles and runs `.yar` rules from `rules/` (resolved via `resolve_rules_dir`) alongside embedded fallback rules:
+
+* `rules/basic_threats.yar` — General threat signatures including `Test_Suspicious_Pattern` and `Trojan_Generic_Dropper`.
+
+* `rules/eicar.yar` — Standard `EICAR_Test_File` detection rule.
+
+* `rules/malware_signatures.yar` — Behavioral and script indicators including `Suspicious_Webshell` (PHP webshell patterns) and `Suspicious_PowerShell_Downloader` (PowerShell download cradles, `certutil`, `bitsadmin`).
+
+* **Self-False-Positive Prevention:** Embedded test patterns (such as `OBFUSCATED_EICAR` XOR-encoded with `0x5C`) are decoded using `std::hint::black_box` so the compiled binary does not trigger false positives on itself.
+
+### Quarantine Vault (`crates/quarantine`)
+
+* **Encrypted Storage (`SQV1` Format):** Flagged files are encrypted per-file using **AES-256-GCM** (`aes-gcm`) with `OsRng`-generated keys in **64 KB** chunks (`MAGIC_HEADER = b"SQV1"`), while retaining backwards-compatible XOR fallback support (`0xAA`).
+
+* **Non-Destructive Workflows:** Users can inspect quarantined metadata (`id`, `original_path`, `sha256`, `rule`, `file_size`, `timestamp`) and choose **Restore (Safe)**, **Restore All**, or permanent **Delete**.
+
+
+
+### Desktop UI & Native Notifications (`apps/desktop-ui`)
+
+The Tauri 2 desktop application (`1140×780`, `com.itsvrtx.sentinelav`) includes:
+
+* **Native Windows Toast Notifications:** Powered by `tauri-plugin-notification` for scan completion summaries and threat alerts that jump straight to the Quarantine Vault (`focus_and_open_vault`).
+
+* **Threat Scanner Tab:** Quick folder shortcuts (`get_common_folders`), native OS folder picker via `rfd` (`pick_custom_folder`), live scan progress, and scan history.
+
+* **Quarantine Vault Tab:** View quarantined threats, inspect hashes and matched rules, and restore or delete items.
+
+* **Process Monitor Tab:** Live system process list (`sysinfo`) with sortable CPU and memory columns, search filtering, suspicious process highlighting, and a **Task Inspector** supporting **Open Location**, **Scan**, and **End Task**.
+
+* **Signatures & Scan Logs Tab:** Inspect active YARA-X signatures (`get_active_signatures`) and persistent JSONL scan logs (`scan_log.rs`, with `clear_clean_logs`).
+
+* **Shell Controls:** Dark/light theme toggle, Fullscreen (`F11`), and System Tray integration (`TrayIconBuilder` with close-to-tray interception).
+
+| Process Monitor | Signatures & Scan Logs | Light / Additional View |
+| :---: | :---: | :---: |
+|  |  |  |
+
+
+
+### Behavioral & Network Shields (`core-scanner` & `kernel-sensor`)
+
+The workspace includes modular user-mode shield implementations across `crates/core-scanner/src/` and `crates/kernel-sensor/src/`:
+
+* **Execution & Script Inspection:** `amsi.rs`, `motw.rs` (Mark-of-the-Web checks), `browser_shield.rs`, `process_shield.rs`, `memory_scanner.rs`, `entropy.rs`
+
+* **Persistence & Driver Checks:** `persistence.rs`, `byovd.rs` (Bring Your Own Vulnerable Driver indicators)
+
+* **Network & Peripheral Monitoring:** `dns_filter.rs`, `egress_lockdown.rs` (targets Living-off-the-Land binaries such as `mshta.exe`, `certutil.exe`, `regsvr32.exe`, `rundll32.exe`, `bitsadmin.exe`, `cscript.exe`, and `wscript.exe` on outbound ports `80`, `443`, `8080`, `8443`), `network_monitor.rs`, and `usb.rs`
+
+## Honest Scope & Roadmap Note (`v0.1.0`)
+
+Sentinel AV **v0.1.0** operates strictly in **user mode** (on-demand and watch-mode directory scanning, AES-256-GCM quarantine vault, process monitoring, and user-mode behavioral/network checks).
+
+True Windows **kernel-mode** components—such as a filesystem minifilter driver, Windows Filtering Platform (WFP) callouts, kernel ETW streams, and Protected Process Light (PPL) enforcement—are **not** included in `v0.1.0`. They are planned for a future VM-tested phase due to Windows driver signing and EV code-signing certificate requirements.
 
 ## Repository Structure
 
 ```text
 sentinel-av/
-├── README.md
-├── .gitignore
-├── Cargo.toml                         # Workspace manifest
-├── Cargo.lock
-├── rules/                             # YARA-X signature rules (also embedded for standalone .exe)
+├── .cargo/                     # Cargo workspace configuration
+├── Cargo.toml                  # Workspace manifest (5 member crates)
+├── Cargo.lock                  # Locked dependency graph
+├── rules/                      # YARA-X signature files
 │   ├── basic_threats.yar
 │   ├── eicar.yar
 │   └── malware_signatures.yar
 ├── crates/
-│   ├── core-scanner/                  # YARA-X engine, chunked SHA-256, Bloom/trust cache, shields
-│   ├── quarantine/                    # Per-file AES-256-GCM 64 KB chunked vault (restore/delete)
-│   ├── kernel-sensor/                 # Directory watcher, USB & network monitor
-│   └── service-daemon/                # Headless CLI / background scanner
-└── apps/
-    └── desktop-ui/                    # Tauri 2 desktop app (HTML/CSS/JS + Rust IPC commands)
+│   ├── core-scanner/           # YARA-X engine, streaming SHA-256, Bloom/trust cache, shields
+│   ├── quarantine/             # AES-256-GCM (SQV1) 64 KB chunked quarantine vault
+│   ├── kernel-sensor/          # User-mode DirectorySensor, network_monitor, usb
+│   └── service-daemon/         # Headless CLI & --watch (-w) real-time folder scanner
+├── apps/
+│   └── desktop-ui/             # Tauri 2 app + Vanilla HTML/CSS/JS frontend (src/index.html)
+└── screenshots/                # UI and system tray screenshots
 ```
 
----
+## Prerequisites, Build & Test Commands
 
-## Getting Started
+### Prerequisites (Windows)
 
-### Prerequisites
-- [Rust](https://www.rust-lang.org/tools/install) (latest stable toolchain)
-- Windows 10/11 (with WebView2 and Microsoft C++ Build Tools for Tauri)
-- Tauri CLI v2:
+* **Windows 10 / 11** with **Microsoft Edge WebView2** runtime
+
+* **Microsoft C++ Build Tools** (Desktop development with C++)
+
+* **Rust toolchain** (`rustup` / `cargo`, Rust **1.90+** required by `apps/desktop-ui/src-tauri`)
+
+* **Tauri CLI v2:**
+
   ```powershell
   cargo install tauri-cli --version "^2.0.0"
   ```
 
-### Run in Development Mode
-```powershell
-git clone https://github.com/itsvrtx/sentinel-av.git
-cd sentinel-av/apps/desktop-ui
-cargo tauri dev
-```
+### Clone, Run, Test & Build
 
-### Run Tests & Build Standalone `.exe` / Installer
 ```powershell
-# Run workspace unit and integration tests (from repo root)
+# 1. Clone the repository
+git clone https://github.com/itsvrtx/sentinel-av.git
+cd sentinel-av
+
+# 2. Run the desktop app in development mode
+cargo tauri dev
+
+# 3. Run all workspace unit and integration tests
 cargo test --workspace
 
-# Build release binary and Windows installer (from apps/desktop-ui)
+# 4. Build release binaries and installer artifacts
 cargo tauri build
 ```
 
----
-
-## AI-Assisted Engineering Disclosure
-
-This entire project was built **under human supervision** to explore the depth and limits of modern AI-assisted software engineering—from zero prior systems/antivirus knowledge to a multi-crate Rust desktop application.
-
-- **AI Models Used:** Claude, Gemini Hydrogen, DeepSeek v4.1, and Nemotron 3 Ultra
-- **Applications Used:** Claude, Antigravity, VS Code
-- **Workflow & Token Optimization:** Built using structured task specifications and **ponytail** skills to keep context focused and save tokens across iterations.
-- **Human Role:** Architecture direction, UI/UX design decisions, manual testing, security review, and GitHub release management by [**itsvrtx**](https://github.com/itsvrtx).
-
----
-
 ## License
 
-This project is licensed under the **MIT License** — free to use, modify, and distribute for everyone. See the [LICENSE](https://www.google.com/search?q=LICENSE) file for details.
+Sentinel AV is released under the **[MIT License](https://github.com/itsvrtx/sentinel-av/blob/main/LICENSE.md)**.
